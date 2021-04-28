@@ -1,0 +1,49 @@
+name:                CQLanguage
+version:             0.1.0.0
+github:              "cekpowell/CQLanguage"
+license:             BSD3
+author:              "Charlie Powell"
+maintainer:          "cp6g18@soton.ac.uk"
+copyright:           "charlie"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/cekpowell/CQLanguage#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- array
+
+library:
+  source-dirs: src
+
+executables:
+  CQLanguage-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - CQLanguage
+
+tests:
+  CQLanguage-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - CQLanguage
