@@ -1,1 +1,3 @@
-LET test = READ "test.csv"
+LET var1 = READ "test.csv";
+LET var2 = SELECT [1] var1;
+RETURN var2;

@@ -1,6 +1,6 @@
-name:                CQLanguage
+name:                CQL
 version:             0.1.0.0
-github:              "cekpowell/CQLanguage"
+github:              "cekpowell/CQL"
 license:             BSD3
 author:              "Charlie Powell"
 maintainer:          "cp6g18@soton.ac.uk"
@@ -17,17 +17,18 @@ extra-source-files:
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/cekpowell/CQLanguage#readme>
+description:         Please see the README on GitHub at <https://github.com/cekpowell/CQL#readme>
 
 dependencies:
 - base >= 4.7 && < 5
 - array
+- split
 
 library:
   source-dirs: src
 
 executables:
-  CQLanguage-exe:
+  CQL-exe:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
@@ -35,10 +36,10 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - CQLanguage
+    - CQL
 
 tests:
-  CQLanguage-test:
+  CQL-test:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
@@ -46,4 +47,4 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - CQLanguage
+    - CQL

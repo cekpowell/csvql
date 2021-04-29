@@ -1,0 +1,4 @@
+- Remove ReturnMethod in grammar definition and make it just Return Table
+
+- Allow for WHERE methods to specifiy operations to perform on the column attribute
+    - e.g. LET var2 = SELECT * var1 WHERE [@1 - 1 == "2"];
