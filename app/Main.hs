@@ -25,8 +25,8 @@ import Data.List.Split
 type Cell = String
 type Row = [Cell]
 type Table = [Row]
-type Var = (String, [[String]])
-type Vars = [(String, [[String]])]
+type Var = (String, Table)
+type Vars = [Var]
 
 
 
@@ -168,8 +168,8 @@ getTableFromVar name ((varName, table):vs) | varName == name  = table
         -- @params: 
         -- @return:
 getTableFromFunction :: FunctionTable -> Vars -> IO Table
-getTableFromFunction function@(SelectAll tableType) vars       = getTableFromSelect function vars
-getTableFromFunction function@(SelectCol cols tableType) vars  = getTableFromSelect function vars
+getTableFromFunction (Select selectTable) vars = getTableFromSelect selectTable vars
+getTableFromFunction (Delete deleteTable) vars = getTableFromDelete deleteTable vars
 
 
 
@@ -192,12 +192,21 @@ getTableFromFunction function@(SelectCol cols tableType) vars  = getTableFromSel
         -- @brief:
         -- @params: 
         -- @return:
-getTableFromSelect :: FunctionTable -> Vars -> IO Table
-getTableFromSelect (SelectAll tableType) vars       = (getTableFromType tableType vars)
-getTableFromSelect (SelectCol cols tableType) vars  = do
-                                                        table <- getTableFromType tableType vars
-                                                        let tableCols = (selectTableCols cols table)
-                                                        return tableCols
+getTableFromSelect :: SelectTable -> Vars -> IO Table
+getTableFromSelect (SelectAll tableType) vars                 = (getTableFromType tableType vars)
+getTableFromSelect (SelectCol cols tableType) vars            = do
+                                                                        table <- getTableFromType tableType vars
+                                                                        let tableCols = (selectTableCols cols table)
+                                                                        return tableCols
+getTableFromSelect (SelectAllWhere tableType predicates) vars = do
+                                                                        table <- getTableFromType tableType vars
+                                                                        let whereTable = getTableFromWhere table predicates
+                                                                        return whereTable
+getTableFromSelect (SelectColWhere cols tableType predicates) vars = do 
+                                                                        table <- getTableFromType tableType vars
+                                                                        let whereTable = getTableFromWhere table predicates
+                                                                        let tableCols = (selectTableCols cols table)
+                                                                        return tableCols
 
 -- selectTableCols
         -- @brief:
@@ -213,10 +222,114 @@ selectTableCols cols (row:rows)  = newRow : (selectTableCols cols rows)
         -- @brief:
         -- @params: 
         -- @return:
-selectRowCols:: [Int] -> Row -> Row
+selectRowCols :: [Int] -> Row -> Row
 selectRowCols [] row          = []
 selectRowCols (col:cols) row   = [(row!!col)] ++ (selectRowCols cols row)
 
+
+---------------
+--- DELETE  ---
+---------------
+
+
+-- getTableFromDelete
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromDelete :: DeleteTable -> Vars -> IO Table
+getTableFromDelete (DeleteAll tableType) vars      = return []
+getTableFromDelete (DeleteCol cols tableType) vars = do
+                                                        table <- getTableFromType tableType vars
+                                                        let tableCols = deleteTableCols cols table 
+                                                        return tableCols
+getTableFromDelete (DeleteAllWhere tableType predicates) vars = do
+                                                                        table <- getTableFromType tableType vars
+                                                                        let whereTable = getTableFromWhere table predicates
+                                                                        let deleteTable = table \\ whereTable
+                                                                        return deleteTable
+
+
+
+-- sort the list of columns into descending order, and then dont need to account for change in index
+
+-- deleteTableCols
+        -- @brief:
+        -- @params: 
+        -- @return:
+deleteTableCols :: [Int] -> Table -> Table
+deleteTableCols cols []          = []
+deleteTableCols cols (row:rows)  = newRow : (deleteTableCols cols rows)
+        where
+                sortedCols = reverse (sort cols)
+                newRow = deleteRowCols sortedCols row
+
+-- deleteRowCols
+        -- @brief:
+        -- @params: 
+        -- @return:
+deleteRowCols :: [Int] -> Row -> Row
+deleteRowCols [] row          = row
+deleteRowCols (col:cols) row   = deleteRowCols cols newRow
+        where 
+                newRow = deleteRowCol col 0 row -- deleteRowCol columnToDelete currentColumn row
+
+deleteRowCol :: Int -> Int -> Row -> Row
+deleteRowCol col currentcol [] = []
+deleteRowCol col currentCol (cell:cells) | col == currentCol = cells
+                                         | otherwise = cell : (deleteRowCol col (currentCol + 1) cells)
+
+
+-----------
+-- WHERE --
+-----------
+
+
+-- getTableFromWhere
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromWhere :: Table -> [Predicate] ->  Table
+getTableFromWhere table []            = table
+getTableFromWhere table (pred:preds)  = getTableFromWhere (getTableFromPredicate table pred) preds
+
+-- getTableFromPredicate
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromPredicate :: Table -> Predicate -> Table
+getTableFromPredicate [] pred = []
+getTableFromPredicate (row:rows) pred | rowSatisfyPredicate row pred = row : (getTableFromPredicate rows pred)
+                                      | otherwise                    = getTableFromPredicate rows pred
+
+-- rowSatisfyPredicate
+        -- @brief:
+        -- @params: 
+        -- @return:
+rowSatisfyPredicate :: Row -> Predicate -> Bool
+rowSatisfyPredicate row (Not predicate)              = not (rowSatisfyPredicate row predicate)
+rowSatisfyPredicate row (And predicate1 predicate2)  = and [(rowSatisfyPredicate row predicate1),  (rowSatisfyPredicate row predicate2)]
+rowSatisfyPredicate row (Or predicate1 predicate2)   = or  [(rowSatisfyPredicate row predicate1),  (rowSatisfyPredicate row predicate2)]
+rowSatisfyPredicate row (Comparison comparisonType)  = rowSatisfyComparison row comparisonType
+
+-- rowSatisfyComparison
+        -- @brief:
+        -- @params: 
+        -- @return:
+rowSatisfyComparison :: Row -> ComparisonType -> Bool
+rowSatisfyComparison row (ColVal col operator val)  = satisfyOperator operator (row!!(col)) val
+rowSatisfyComparison row (ColCol col1 operator col2)  = satisfyOperator operator (row !! (col1)) (row !! (col2))
+
+-- satisfyOperator
+        -- @brief:
+        -- @params: 
+        -- @return:
+satisfyOperator :: ComparisonOperator -> String -> String -> Bool
+satisfyOperator Eq val1 val2             = val1 == val2
+satisfyOperator LessThan val1 val2       = val1 < val2 
+satisfyOperator GreaterThan val1 val2    = val1 > val2
+satisfyOperator LessThanEq val1 val2     = val1 <= val2
+satisfyOperator GreaterThanEq val1 val2  = val1 >= val2
+satisfyOperator NotEq val1 val2          = val1 /= val2
 
 
 ------------
@@ -228,12 +341,6 @@ selectRowCols (col:cols) row   = [(row!!col)] ++ (selectRowCols cols row)
 ------------
 -- DELETE --
 ------------
-
--- todo...
-
------------
--- WHERE --
------------
 
 -- todo...
 

@@ -15,6 +15,7 @@ $white+    ;
   LET           { \p s -> TokenLet p }
   RETURN        { \p s -> TokenReturn p }
   SELECT        { \p s -> TokenSelect p }
+  DELETE        { \p s -> TokenDelete p }
   WHERE         { \p s -> TokenWhere p }
   NOT           { \p s -> TokenNot p }
   AND           { \p s -> TokenAnd p }
@@ -44,6 +45,7 @@ data Token = TokenRead AlexPosn
               | TokenLet AlexPosn
               | TokenReturn AlexPosn
               | TokenSelect AlexPosn
+              | TokenDelete AlexPosn
               | TokenWhere AlexPosn
               | TokenNot AlexPosn
               | TokenAnd AlexPosn
@@ -72,6 +74,7 @@ tokenPosn (TokenRead (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLet (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenReturn (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenSelect (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenDelete (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenWhere (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenNot (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAnd (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
