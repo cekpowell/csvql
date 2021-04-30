@@ -11,11 +11,20 @@ import Tokens
     Let      { TokenLet _ }
     Return   { TokenReturn _ }
     Select   { TokenSelect _ }
+    Insert   { TokenInsert _ }
+    Values   { TokenValues _ }
+    Column   { TokenColumn _ }
     Delete   { TokenDelete _ }
     Where    { TokenWhere _ }
     Not      { TokenNot _ }
     And      { TokenAnd _ }
     Or       { TokenOr _ }
+    Order    { TokenOrder _ }
+    By       { TokenBy _ }
+    Asc      { TokenAsc _ }
+    Desc     { TokenDesc _ }
+    Limit    { TokenLimit _ }
+    Offset   { TokenOffset _ }
     '='      { TokenAssign _ }
     "=="     { TokenEq _ }
     "<"      { TokenLessThan _ }
@@ -43,35 +52,45 @@ TableType : Read Filename { Read $2 }
           | Var { Var $1 }
           | FunctionTable { Function $1 }
 
-FunctionTable : SelectTable { Select $1 }
-              | DeleteTable { Delete $1 }
+FunctionTable : SelectFunction { Select $1 }
+              | InsertFunction { Insert $1 }
+              | DeleteFunction { Delete $1 }
+              | FormatFunction { Format $1 }
 
-SelectTable : Select '*' TableType { SelectAll $3 }
-            | Select List TableType { SelectCol $2 $3 }
-            | Select '*' TableType Where Conditions { SelectAllWhere $3 $5 }
-            | Select List TableType Where Conditions { SelectColWhere $2 $3 $5 }
+SelectFunction : Select '*' TableType { SelectAll $3 }
+               | Select List(ColumnRef) TableType { SelectCol $2 $3 }
+               | Select '*' Where List(Predicate) TableType { SelectAllWhere $4 $5 }
+               | Select List(ColumnRef) Where List(Predicate) TableType { SelectColWhere $2 $4 $5 }
 
-DeleteTable : Delete TableType { DeleteAll $2}
-            | Delete List TableType { DeleteCol $2 $3 }
-            | Delete TableType Where Conditions { DeleteAllWhere $2 $4 }
+DeleteFunction : Delete TableType { DeleteAll $2}
+               | Delete List(ColumnRef) TableType { DeleteCol $2 $3 }
+               | Delete Where List(Predicate) TableType { DeleteAllWhere $3 $4 }
 
-List : '[' ']'       { [] }
-     | '[' ListCont ']'  { $2 }
-ListCont : int           { [$1] }
-         | int ',' ListCont  { [$1] ++ $3}
+InsertFunction : Insert Values List(Str) TableType { InsertValues $3 $4 }
+               | Insert ColumnRef int Str TableType { InsertColumn $3 $4 $5}
 
-Conditions : '[' ']' {[]}
-           | '[' ConditionsCont ']'  { $2 }
-ConditionsCont : Predicate                      { [$1] }
-                | Predicate ',' ConditionsCont  { [$1] ++ $3}
+FormatFunction: Order By Direction TableType { OrderBy $3 $4 }
+              | Order By List(ColumnRef) Direction TableType { OrderByCol $3 $4 $5 }
+              | Limit int TableType { Limit $2 $3 }
+              | Offset int TableType {Offset $2 $3 }
+
+Direction : Asc { Asc }
+          | Desc { Desc }
+
+List (a) : '[' ']'       { [] }
+         | '[' ListCont (a) ']'  { $2 }
+ListCont (a) : a           { [$1] }
+             | a ',' ListCont (a)  { [$1] ++ $3}
 
 Predicate : Not Predicate  { Not $2 }
           | Predicate And Predicate { And $1 $3 }
           | Predicate Or Predicate { Or $1 $3  }
           | Comparison     { Comparison $1}
 
-Comparison : "@" int ComparisonOperator Str      { ColVal $2 $3 $4 }
-           | "@" int ComparisonOperator "@" int  { ColCol $2 $3 $5 }
+Comparison : ColumnRef ComparisonOperator Str      { ColVal $1 $2 $3 }
+           | ColumnRef ComparisonOperator ColumnRef  { ColCol $1 $2 $3 }
+
+ColumnRef : "@" int { $2 }
 
 ComparisonOperator : "==" { Eq } 
                    | "<"  { LessThan }
@@ -95,20 +114,36 @@ data TableType = Read String
                | Function FunctionTable
                  deriving (Show, Eq)
 
-data FunctionTable = Select SelectTable
-                   | Delete DeleteTable
+data Direction = Asc
+               | Desc
+                 deriving (Show,Eq)
+
+data FunctionTable = Select SelectFunction
+                   | Insert InsertFunction
+                   | Delete DeleteFunction
+                   | Format FormatFunction
                      deriving (Show, Eq)
 
-data SelectTable = SelectAll TableType
-                 | SelectCol [Int] TableType
-                 | SelectAllWhere TableType [Predicate]
-                 | SelectColWhere [Int] TableType [Predicate]
-                   deriving (Show, Eq)
+data SelectFunction = SelectAll TableType
+                    | SelectCol [Int] TableType
+                    | SelectAllWhere [Predicate] TableType
+                    | SelectColWhere [Int] [Predicate] TableType
+                      deriving (Show, Eq)
 
-data DeleteTable = DeleteAll TableType
-                 | DeleteCol [Int] TableType
-                 | DeleteAllWhere TableType [Predicate]
-                   deriving (Show, Eq)
+data DeleteFunction = DeleteAll TableType
+                    | DeleteCol [Int] TableType
+                    | DeleteAllWhere [Predicate] TableType
+                      deriving (Show, Eq)
+
+data InsertFunction = InsertValues [String] TableType
+                    | InsertColumn Int String TableType
+                      deriving (Show, Eq)
+
+data FormatFunction = OrderBy Direction TableType
+                    | OrderByCol [Int] Direction TableType
+                    | Limit Int TableType
+                    | Offset Int TableType
+                      deriving (Show,Eq)
 
 data Predicate = Not Predicate 
                | And Predicate Predicate

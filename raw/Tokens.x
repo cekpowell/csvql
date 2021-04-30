@@ -15,11 +15,20 @@ $white+    ;
   LET           { \p s -> TokenLet p }
   RETURN        { \p s -> TokenReturn p }
   SELECT        { \p s -> TokenSelect p }
+  INSERT        { \p s -> TokenInsert p }
+  VALUES        { \p s -> TokenValues p }
+  COLUMN        { \p s -> TokenColumn p }
   DELETE        { \p s -> TokenDelete p }
   WHERE         { \p s -> TokenWhere p }
   NOT           { \p s -> TokenNot p }
   AND           { \p s -> TokenAnd p }
   OR            { \p s -> TokenOr p }
+  ORDER         { \p s -> TokenOrder p }
+  BY            { \p s -> TokenBy p }
+  ASC           { \p s -> TokenAsc p }
+  DESC          { \p s -> TokenDesc p }
+  LIMIT         { \p s -> TokenLimit p }
+  OFFSET        { \p s -> TokenOffset p }
   "="           { \p s -> TokenAssign p }
   "=="          { \p s -> TokenEq p }
   "<"           { \p s -> TokenLessThan p }
@@ -45,11 +54,20 @@ data Token = TokenRead AlexPosn
               | TokenLet AlexPosn
               | TokenReturn AlexPosn
               | TokenSelect AlexPosn
+              | TokenInsert AlexPosn
+              | TokenValues AlexPosn
+              | TokenColumn AlexPosn
               | TokenDelete AlexPosn
               | TokenWhere AlexPosn
               | TokenNot AlexPosn
               | TokenAnd AlexPosn
               | TokenOr AlexPosn 
+              | TokenOrder AlexPosn
+              | TokenBy AlexPosn
+              | TokenAsc AlexPosn
+              | TokenDesc AlexPosn
+              | TokenLimit AlexPosn
+              | TokenOffset AlexPosn
               | TokenAssign AlexPosn
               | TokenEq AlexPosn
               | TokenLessThan AlexPosn
@@ -74,11 +92,20 @@ tokenPosn (TokenRead (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLet (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenReturn (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenSelect (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenInsert (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenValues (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenColumn (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenDelete (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenWhere (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenNot (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAnd (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenOr (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenOrder (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenBy (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenAsc (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenDesc (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenLimit (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenOffset (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAssign (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenEq (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLessThan (AlexPn a l c)) = show(l) ++ ":" ++ show(c)

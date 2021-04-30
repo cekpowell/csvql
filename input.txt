@@ -1,3 +1,3 @@
 LET var1 = READ "test.csv";
-LET var2 = DELETE var1 WHERE [@0=="78"];
+LET var2 = LIMIT 1 OFFSET 1 var1;
 RETURN var2;
