@@ -402,9 +402,9 @@ getTableFromFormat (OrderBy direction tableType) vars =  do
                                                                 table <- getTableFromType tableType vars
                                                                 let orderTable = getTableFromOrder direction table 
                                                                 return orderTable
-getTableFromFormat (OrderByCol col direction tableType) vars =  do 
+getTableFromFormat (OrderByCol cols direction tableType) vars =  do 
                                                                         table <- getTableFromType tableType vars
-                                                                        let orderTable = getTableFromOrderCol col direction table
+                                                                        let orderTable = getTableFromOrderCol cols direction table
                                                                         return orderTable
 getTableFromFormat (Limit limit tableType) vars   = do
                                                         table <- getTableFromType tableType vars
