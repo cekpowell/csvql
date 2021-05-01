@@ -19,12 +19,15 @@ import Tokens
     Not      { TokenNot _ }
     And      { TokenAnd _ }
     Or       { TokenOr _ }
+    Union    { TokenUnion _ }
+    All      { TokenAll _ }
     Order    { TokenOrder _ }
     By       { TokenBy _ }
     Asc      { TokenAsc _ }
     Desc     { TokenDesc _ }
     Limit    { TokenLimit _ }
     Offset   { TokenOffset _ }
+    Last     { TokenLast _ }
     '='      { TokenAssign _ }
     "=="     { TokenEq _ }
     "<"      { TokenLessThan _ }
@@ -38,6 +41,8 @@ import Tokens
     ','      { TokenComma _ }     
     '*'      { TokenAst _ } 
     "@"      { TokenAt _ } 
+    '('      { TokenLParen _ }
+    ')'      { TokenRParen _ }
     int      { TokenInt  _ $$ }
     Filename { TokenFilename _ $$ }
     Str      { TokenStr _ $$ }
@@ -51,10 +56,12 @@ Exp : Let Var '=' TableType ';' Exp     { Let $2 $4 $6 }
 TableType : Read Filename { Read $2 }
           | Var { Var $1 }
           | FunctionTable { Function $1 }
+          | '(' TableType ')' { $2 }
 
 FunctionTable : SelectFunction { Select $1 }
               | InsertFunction { Insert $1 }
               | DeleteFunction { Delete $1 }
+              | UnionFunction  { Union $1 }
               | FormatFunction { Format $1 }
 
 SelectFunction : Select '*' TableType { SelectAll $3 }
@@ -69,10 +76,15 @@ DeleteFunction : Delete TableType { DeleteAll $2}
 InsertFunction : Insert Values List(Str) TableType { InsertValues $3 $4 }
                | Insert ColumnRef int Str TableType { InsertColumn $3 $4 $5}
 
+UnionFunction : Union TableType TableType { UnionUnique $2 $3 }
+              | Union All TableType TableType { UnionAll $3 $4 }
+               
+
 FormatFunction: Order By Direction TableType { OrderBy $3 $4 }
               | Order By List(ColumnRef) Direction TableType { OrderByCol $3 $4 $5 }
               | Limit int TableType { Limit $2 $3 }
-              | Offset int TableType {Offset $2 $3 }
+              | Offset int TableType { Offset $2 $3 }
+              | Last int TableType { Last $2 $3 }
 
 Direction : Asc { Asc }
           | Desc { Desc }
@@ -121,6 +133,7 @@ data Direction = Asc
 data FunctionTable = Select SelectFunction
                    | Insert InsertFunction
                    | Delete DeleteFunction
+                   | Union UnionFunction
                    | Format FormatFunction
                      deriving (Show, Eq)
 
@@ -139,11 +152,16 @@ data InsertFunction = InsertValues [String] TableType
                     | InsertColumn Int String TableType
                       deriving (Show, Eq)
 
+data UnionFunction = UnionUnique TableType TableType
+                   | UnionAll TableType TableType 
+                     deriving (Show, Eq)
+
 data FormatFunction = OrderBy Direction TableType
                     | OrderByCol [Int] Direction TableType
                     | Limit Int TableType
                     | Offset Int TableType
-                      deriving (Show,Eq)
+                    | Last Int TableType
+                      deriving (Show, Eq)
 
 data Predicate = Not Predicate 
                | And Predicate Predicate

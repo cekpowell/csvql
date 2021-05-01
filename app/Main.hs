@@ -24,6 +24,7 @@ import Data.List.Split
 
 type Cell = String
 type Row = [Cell]
+type Column =  [Cell]
 type Table = [Row]
 type Var = (String, Table)
 type Vars = [Var]
@@ -167,10 +168,11 @@ getTableFromVar name ((varName, table):vs) | varName == name  = table
         -- @params: 
         -- @return:
 getTableFromFunction :: FunctionTable -> Vars -> IO Table
-getTableFromFunction (Select selectFunction) vars           = getTableFromSelect selectFunction vars
-getTableFromFunction (Insert insertFunction) vars           = getTableFromInsert insertFunction vars
-getTableFromFunction (Delete deleteFunction) vars           = getTableFromDelete deleteFunction vars
-getTableFromFunction (Format formatFunction) vars           = getTableFromFormat formatFunction vars
+getTableFromFunction (Select selectFunction) vars = getTableFromSelect selectFunction vars
+getTableFromFunction (Insert insertFunction) vars = getTableFromInsert insertFunction vars
+getTableFromFunction (Delete deleteFunction) vars = getTableFromDelete deleteFunction vars
+getTableFromFunction (Format formatFunction) vars = getTableFromFormat formatFunction vars
+getTableFromFunction (Union unionFunction) vars   = getTableFromUnion unionFunction vars 
 
 
 
@@ -371,6 +373,22 @@ satisfyOperator GreaterThanEq val1 val2  = val1 >= val2
 satisfyOperator NotEq val1 val2          = val1 /= val2
 
 
+-----------
+-- UNION -- 
+-----------
+
+getTableFromUnion :: UnionFunction -> Vars -> IO Table
+getTableFromUnion (UnionUnique tableType1 tableType2) vars    = do
+                                                                table1 <- getTableFromType tableType1 vars
+                                                                table2 <- getTableFromType tableType2 vars
+                                                                let unionTable = nub (table1 ++ table2)
+                                                                return unionTable
+getTableFromUnion (UnionAll tableType1 tableType2) vars = do
+                                                                table1 <- getTableFromType tableType1 vars
+                                                                table2 <- getTableFromType tableType2 vars
+                                                                let unionTable = table1 ++ table2
+                                                                return unionTable
+
 ------------
 -- FORMAT -- 
 ------------
@@ -384,9 +402,9 @@ getTableFromFormat (OrderBy direction tableType) vars =  do
                                                                 table <- getTableFromType tableType vars
                                                                 let orderTable = getTableFromOrder direction table 
                                                                 return orderTable
-getTableFromFormat (OrderByCol cols direction tableType) vars =  do 
+getTableFromFormat (OrderByCol col direction tableType) vars =  do 
                                                                         table <- getTableFromType tableType vars
-                                                                        let orderTable = getTableFromOrderCol cols direction table
+                                                                        let orderTable = getTableFromOrderCol col direction table
                                                                         return orderTable
 getTableFromFormat (Limit limit tableType) vars   = do
                                                         table <- getTableFromType tableType vars
@@ -394,23 +412,51 @@ getTableFromFormat (Limit limit tableType) vars   = do
                                                         return limitTable
 getTableFromFormat (Offset offset tableType) vars = do
                                                         table <- getTableFromType tableType vars
-                                                        let limitTable = getTableFromOffset offset table
-                                                        return limitTable
-
+                                                        let offsetTable = getTableFromOffset offset table
+                                                        return offsetTable
+getTableFromFormat (Last num tableType) vars = do
+                                                table <- getTableFromType tableType vars
+                                                let lastTable = getTableFromLast num table
+                                                return lastTable
 
 -- getTableFromOrder
         -- @brief:
         -- @params: 
         -- @return:
 getTableFromOrder :: Direction -> Table -> Table
-getTableFromOrder dir table = []
+getTableFromOrder Asc table  = sort table
+getTableFromOrder Desc table = reverse (sort table)
 
 -- getTableFromOrderCol
         -- @brief:
         -- @params: 
         -- @return:
 getTableFromOrderCol :: [Int] -> Direction -> Table -> Table
-getTableFromOrderCol cols dir table = []
+getTableFromOrderCol [] dir table | dir == Asc  = sort table
+                                  | dir == Desc = reverse (sort table)
+getTableFromOrderCol (col:cols) dir table       = getTableFromSortedCol col sortedCol sortedTable
+        where
+                sortedCol | dir == Asc  = sort((transpose table )!!col)
+                          | dir == Desc = reverse (sort((transpose table )!!col))
+                sortedTable             = getTableFromOrderCol cols dir table
+
+-- getTableFromSortedCol
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromSortedCol :: Int -> Column -> Table -> Table
+getTableFromSortedCol col [] table = []
+getTableFromSortedCol col (cell:cells) table = (getRowFromColValue col cell table) : (getTableFromSortedCol col cells newTable)
+        where 
+                newTable = table \\ [(getRowFromColValue col cell table)]
+
+-- getRowFromColValue
+        -- @brief:
+        -- @params: 
+        -- @return:
+getRowFromColValue :: Int -> Cell -> Table -> Row
+getRowFromColValue col cell (row:rows) | cell == (row!!col) = row
+                                       | otherwise = getRowFromColValue col cell rows
 
 -- getTableFromLimit
         -- @brief:
@@ -426,6 +472,13 @@ getTableFromLimit limit (row:rows) = row : (getTableFromLimit (limit-1) rows)
         -- @return:
 getTableFromOffset :: Int -> Table -> Table
 getTableFromOffset offset table = drop offset table
+
+-- getTableFromLast
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromLast lastNum table = drop ((length table) - (lastNum)) table
+
 
 
 

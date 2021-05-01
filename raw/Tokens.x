@@ -23,12 +23,15 @@ $white+    ;
   NOT           { \p s -> TokenNot p }
   AND           { \p s -> TokenAnd p }
   OR            { \p s -> TokenOr p }
+  UNION         { \p s -> TokenUnion p }
+  ALL           { \p s -> TokenAll p }
   ORDER         { \p s -> TokenOrder p }
   BY            { \p s -> TokenBy p }
   ASC           { \p s -> TokenAsc p }
   DESC          { \p s -> TokenDesc p }
   LIMIT         { \p s -> TokenLimit p }
   OFFSET        { \p s -> TokenOffset p }
+  LAST          { \p s -> TokenLast p }
   "="           { \p s -> TokenAssign p }
   "=="          { \p s -> TokenEq p }
   "<"           { \p s -> TokenLessThan p }
@@ -42,6 +45,8 @@ $white+    ;
   ","           { \p s -> TokenComma p }
   "*"           { \p s -> TokenAst p }
   "@"           { \p s -> TokenAt p } 
+  "("           { \p s -> TokenLParen p }
+  ")"           { \p s -> TokenRParen p }
   [$digit]+     { \p s -> TokenInt p (read s)}
   \"[$alpha $white \_ \' $digit]* \. [$alpha $white \_ \' $digit]*\" { \p s -> TokenFilename p (read s) }
   \"[$alpha $white \_ \' $digit]*\"    { \p s -> TokenStr p (read s) }
@@ -62,12 +67,15 @@ data Token = TokenRead AlexPosn
               | TokenNot AlexPosn
               | TokenAnd AlexPosn
               | TokenOr AlexPosn 
+              | TokenUnion AlexPosn
+              | TokenAll AlexPosn
               | TokenOrder AlexPosn
               | TokenBy AlexPosn
               | TokenAsc AlexPosn
               | TokenDesc AlexPosn
               | TokenLimit AlexPosn
               | TokenOffset AlexPosn
+              | TokenLast AlexPosn
               | TokenAssign AlexPosn
               | TokenEq AlexPosn
               | TokenLessThan AlexPosn
@@ -81,6 +89,8 @@ data Token = TokenRead AlexPosn
               | TokenComma AlexPosn
               | TokenAst AlexPosn
               | TokenAt AlexPosn
+              | TokenLParen AlexPosn
+              | TokenRParen AlexPosn
               | TokenInt AlexPosn Int
               | TokenFilename AlexPosn String
               | TokenStr AlexPosn String
@@ -100,12 +110,15 @@ tokenPosn (TokenWhere (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenNot (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAnd (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenOr (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenUnion (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenAll (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenOrder (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenBy (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAsc (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenDesc (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLimit (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenOffset (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenLast (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAssign (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenEq (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLessThan (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
@@ -119,6 +132,8 @@ tokenPosn (TokenRSquare (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenComma (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAst (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAt (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenLParen (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenRParen (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenInt (AlexPn a l c) _) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenFilename (AlexPn a l c) _) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenStr (AlexPn a l c) _) = show(l) ++ ":" ++ show(c)
