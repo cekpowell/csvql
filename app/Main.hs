@@ -417,7 +417,7 @@ getTableFromJoin (JoinLeft (TableComparison lcol rcol) ltableType rtableType) va
 getTableFromJoin (JoinRight (TableComparison lcol rcol) ltableType rtableType) vars = do 
                                                                                 ltable <- getTableFromType ltableType vars
                                                                                 rtable <- getTableFromType rtableType vars
-                                                                                let joinTable = getTableFromInnerJoin lcol rcol ltable rtable
+                                                                                let joinTable = getTableFromRightJoin lcol rcol ltable rtable
                                                                                 return joinTable
 getTableFromJoin (JoinFull (TableComparison lcol rcol) ltableType rtableType) vars = do 
                                                                                 ltable <- getTableFromType ltableType vars
@@ -447,6 +447,18 @@ getTableFromLeftJoin lcol rcol (lrow:lrows) rtable | matchedRRow == [] = (lrow +
         where
                 matchedRRow = (getRowFromColValue rcol (lrow!!lcol) rtable )
                 nullRRow = getNullRow (getTableWidth rtable) 
+
+-- getTableFromRightJoin
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromRightJoin :: Int -> Int -> Table -> Table -> Table 
+getTableFromRightJoin lcol rcol ltable []                               = []
+getTableFromRightJoin lcol rcol ltable (rrow:rrows) | matchedLRow == [] = (nullLRow ++ rrow) : (getTableFromRightJoin lcol rcol ltable rrows) -- couldn't find a matching row for the right table, so using nulls
+                                                    | otherwise         = (matchedLRow ++ rrow) : (getTableFromRightJoin lcol rcol ltable rrows)
+        where
+                matchedLRow = (getRowFromColValue lcol (rrow!!rcol) ltable )
+                nullLRow = getNullRow (getTableWidth ltable) 
 
 ------------
 -- FORMAT -- 
@@ -644,7 +656,7 @@ printRow (cell:cells) | cells == [] = do putStr cell
                       | otherwise   = do putStr cell
                                          putStr ", "
                                          printRow cells
-                                         
+
 printLines :: [String] -> IO ()
 printLines [] = return ()
 printLines (l:ls) = do putStrLn l
