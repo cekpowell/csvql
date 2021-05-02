@@ -453,7 +453,7 @@ getTableFromLeftJoin lcol rcol (lrow:lrows) rtable | matchedRRow == [] = (lrow +
         -- @params: 
         -- @return:
 getTableFromRightJoin :: Int -> Int -> Table -> Table -> Table 
-getTableFromRightJoin lcol rcol ltable []                                = []
+getTableFromRightJoin lcol rcol ltable []                               = []
 getTableFromRightJoin lcol rcol ltable (rrow:rrows) | matchedLRow == [] = (nullLRow ++ rrow) : (getTableFromRightJoin lcol rcol ltable rrows) -- couldn't find a matching row for the right table, so using nulls
                                                     | otherwise         = (matchedLRow ++ rrow) : (getTableFromRightJoin lcol rcol ltable rrows)
         where
