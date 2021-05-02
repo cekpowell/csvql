@@ -11,6 +11,7 @@ $alpha = [a-zA-Z]
 tokens :-
 $white+    ; 
   "--".*     ; 
+  "--/" [.\n]* "/--" ;
   READ          { \p s -> TokenRead p } 
   LET           { \p s -> TokenLet p }
   RETURN        { \p s -> TokenReturn p }
