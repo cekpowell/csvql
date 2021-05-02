@@ -1,1 +1,73 @@
-RETURN JOIN FULL READ "test.csv" READ "test2.csv";
+---------------
+-- PROBLEM 1 -- 
+---------------
+
+
+-- LET table1 = READ "A.csv";
+-- LET table2 = READ "B.csv";
+
+-- LET joinedTable = JOIN FULL table1 table2;
+
+-- RETURN ORDER BY ASC joinedTable;
+
+
+---------------
+-- PROBLEM 2 --
+--------------- 
+
+
+-- LET table1 = READ "A.csv";
+
+-- LET selectedRows = SELECT [@2,@0] WHERE [@0 == @1] table1;
+
+-- RETURN ORDER BY ASC selectedRows;
+
+
+---------------
+-- PROBLEM 3 --
+--------------- 
+
+-- LET table1 = READ "P.csv";
+-- LET table2 = READ "Q.csv";
+
+-- LET joinedTable = JOIN INNER ON LEFT.@0 == RIGHT.@0 table1 table2;
+
+-- LET column1PNonEmpty = SELECT [@0, @1] WHERE [@1 != ""] joinedTable;
+-- LET column1PEmpty    = SELECT [@0, @5] WHERE [@1 == ""] joinedTable;
+-- LET fullColumn1      = ORDER BY ASC UNION ALL column1PNonEmpty column1PEmpty;
+
+-- LET column2PNonEmpty = SELECT [@0, @2] WHERE [@2 != ""] joinedTable;
+-- LET column2PEmpty    = SELECT [@0, @6] WHERE [@2 == ""] joinedTable;
+-- LET fullColumn2      = ORDER BY ASC UNION ALL column2PNonEmpty column2PEmpty;
+
+-- LET column3PNonEmpty = SELECT [@0, @3] WHERE [@3 != ""] joinedTable;
+-- LET column3PEmpty    = SELECT [@0, @7] WHERE [@3 == ""] joinedTable;
+-- LET fullColumn3      = ORDER BY ASC UNION ALL column3PNonEmpty column3PEmpty;
+
+-- LET columns = JOIN fullColumn1 JOIN fullColumn2 fullColumn3;
+
+-- LET neededColumns = SELECT [@0, @1, @3, @5] columns;
+
+-- RETURN ORDER BY ASC neededColumns;
+
+---------------
+-- PROBLEM 4 -- 
+---------------
+
+-- LET table = READ "A.csv";
+
+-- LET selectedRows = SELECT * WHERE [@1 != ""] table;
+
+-- RETURN ORDER BY ASC selectedRows;
+
+---------------
+-- PROBLEM 5 -- 
+---------------
+
+-- LET table = READ "A.csv";
+
+-- LET joinedTable = JOIN table table;
+
+-- LET insertedColumn = INSERT COLUMN @1 "0" joinedTable;
+
+-- RETURN ORDER BY ASC insertedColumn;

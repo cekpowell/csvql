@@ -83,7 +83,7 @@ DeleteFunction : Delete TableType { DeleteAll $2}
                | Delete Where List(Predicate) TableType { DeleteAllWhere $3 $4 }
 
 InsertFunction : Insert Values List(Str) TableType { InsertValues $3 $4 }
-               | Insert ColumnRef int Str TableType { InsertColumn $3 $4 $5}
+               | Insert Column ColumnRef Str TableType { InsertColumn $3 $4 $5}
 
 UnionFunction : Union TableType TableType { UnionUnique $2 $3 }
               | Union All TableType TableType { UnionAll $3 $4 }

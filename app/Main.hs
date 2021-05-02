@@ -73,10 +73,10 @@ mainPrettyPrint = do
                         putStrLn("\n")
                         sourceText <- readFile filename
 
-                        putStrLn("Program : ")
-                        putStrLn("\n")
-                        putStrLn(sourceText)
-                        putStrLn("\n")
+                        -- putStrLn("Program : ")
+                        -- putStrLn("\n")
+                        -- putStrLn(sourceText)
+                        -- putStrLn("\n")
                         
                         let tokens = alexScanTokens sourceText
                         --putStrLn("\n")
@@ -187,6 +187,7 @@ getTableFromFunction (Delete deleteFunction) vars = getTableFromDelete deleteFun
 getTableFromFunction (Format formatFunction) vars = getTableFromFormat formatFunction vars
 getTableFromFunction (Union unionFunction) vars   = getTableFromUnion unionFunction vars 
 getTableFromFunction (Join joinFunction) vars     = getTableFromJoin joinFunction vars
+
 
 
 
