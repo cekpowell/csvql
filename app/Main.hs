@@ -433,10 +433,19 @@ getTableFromJoin (JoinFull (TableComparison lcol rcol) ltableType rtableType) va
         -- @return:
 getTableFromInnerJoin :: Int -> Int -> Table -> Table -> Table
 getTableFromInnerJoin lcol rcol [] rtable         = []
-getTableFromInnerJoin lcol rcol (lrow:lrows) rtable | matchedRRow == [] = (getTableFromInnerJoin lcol rcol lrows rtable) -- couldn't find a matching row for the right table
-                                                    | otherwise = (lrow ++ matchedRRow) : (getTableFromInnerJoin lcol rcol lrows rtable)
+getTableFromInnerJoin lcol rcol (lrow:lrows) rtable | neededRows == [] = (getTableFromInnerJoin lcol rcol lrows rtable) -- couldn't find a matching row for the right table
+                                                    | otherwise = neededRows ++ (getTableFromInnerJoin lcol rcol lrows rtable)
         where
-                matchedRRow = (getRowFromColValue rcol (lrow!!lcol) rtable )
+                matchedRRows = (getRowsFromColValue rcol (lrow!!lcol) rtable) -- every row in rtable that has the same column value as ltable
+                neededRows = getRowsFromRMatches lrow matchedRRows -- the row in ltable joined to every row it matches in rtable
+
+getRowsFromRMatches :: Row -> [Row] -> [Row]
+getRowsFromRMatches row [] = []
+getRowsFromRMatches row (matchedRow:matches) = (row ++ matchedRow) : (getRowsFromRMatches row matches)
+
+getRowsFromLMatches :: [Row] -> Row -> [Row]
+getRowsFromLMatches [] row = []
+getRowsFromLMatches (matchedRow:matches) row  = (matchedRow ++ row) : (getRowsFromLMatches matches row)
 
 -- getTableFromLeftJoin
         -- @brief:
@@ -444,10 +453,11 @@ getTableFromInnerJoin lcol rcol (lrow:lrows) rtable | matchedRRow == [] = (getTa
         -- @return:
 getTableFromLeftJoin :: Int -> Int -> Table -> Table -> Table 
 getTableFromLeftJoin lcol rcol [] rtable                               = []
-getTableFromLeftJoin lcol rcol (lrow:lrows) rtable | matchedRRow == [] = (lrow ++ nullRRow) : (getTableFromLeftJoin lcol rcol lrows rtable) -- couldn't find a matching row for the right table, so using nulls
-                                                   | otherwise         = (lrow ++ matchedRRow) : (getTableFromLeftJoin lcol rcol lrows rtable)
+getTableFromLeftJoin lcol rcol (lrow:lrows) rtable | neededRows == []  = (lrow ++ nullRRow) : (getTableFromLeftJoin lcol rcol lrows rtable) -- couldn't find a matching row for the right table, so using nulls
+                                                   | otherwise         = neededRows ++ (getTableFromLeftJoin lcol rcol lrows rtable)
         where
-                matchedRRow = (getRowFromColValue rcol (lrow!!lcol) rtable )
+                matchedRRows = (getRowsFromColValue rcol (lrow!!lcol) rtable)
+                neededRows = getRowsFromRMatches lrow matchedRRows 
                 nullRRow = getNullRow (getTableWidth rtable) 
 
 -- getTableFromRightJoin
@@ -456,10 +466,11 @@ getTableFromLeftJoin lcol rcol (lrow:lrows) rtable | matchedRRow == [] = (lrow +
         -- @return:
 getTableFromRightJoin :: Int -> Int -> Table -> Table -> Table 
 getTableFromRightJoin lcol rcol ltable []                               = []
-getTableFromRightJoin lcol rcol ltable (rrow:rrows) | matchedLRow == [] = (nullLRow ++ rrow) : (getTableFromRightJoin lcol rcol ltable rrows) -- couldn't find a matching row for the right table, so using nulls
-                                                    | otherwise         = (matchedLRow ++ rrow) : (getTableFromRightJoin lcol rcol ltable rrows)
+getTableFromRightJoin lcol rcol ltable (rrow:rrows) | neededRows == [] = (nullLRow ++ rrow) : (getTableFromRightJoin lcol rcol ltable rrows) -- couldn't find a matching row for the right table, so using nulls
+                                                    | otherwise         = neededRows ++ (getTableFromRightJoin lcol rcol ltable rrows)
         where
-                matchedLRow = (getRowFromColValue lcol (rrow!!rcol) ltable )
+                matchedLRows = (getRowsFromColValue lcol (rrow!!rcol) ltable)
+                neededRows = getRowsFromLMatches matchedLRows rrow 
                 nullLRow = getNullRow (getTableWidth ltable) 
 
 -- getTableFromFullJoin
@@ -467,20 +478,11 @@ getTableFromRightJoin lcol rcol ltable (rrow:rrows) | matchedLRow == [] = (nullL
         -- @params: 
         -- @return:
 getTableFromFullJoin :: Int -> Int -> Table -> Table -> Table
-getTableFromFullJoin lcol rcol ltable rtable = nub (interleaveAll leftJoinTable rightJoinTable)
+getTableFromFullJoin lcol rcol ltable rtable = nub (leftJoinTable ++ rightJoinTable)
         where
                 leftJoinTable = getTableFromLeftJoin lcol rcol ltable rtable
                 rightJoinTable = getTableFromRightJoin lcol rcol ltable rtable
 
-interleave :: [a] -> [a] -> [a]
-interleave xs ys = concat (zipWith (\x y -> [x]++[y]) xs ys)
-
-interleaveAll :: [a] -> [a] -> [a]
-interleaveAll xs ys = (interleave xs ys) ++ extraElements
-        where
-                extraElements | length xs == length ys = []
-                              | length xs > length ys = drop (length ys) xs
-                              | length xs < length ys = drop (length xs) ys
         
 ------------
 -- FORMAT -- 
@@ -552,6 +554,15 @@ getRowFromColValue col cell [] = []
 getRowFromColValue col cell (row:rows) | cell == (row!!col) = row
                                        | otherwise = getRowFromColValue col cell rows
 
+-- getRowsFromColValue
+        -- @brief:
+        -- @params: 
+        -- @return:
+getRowsFromColValue :: Int -> Cell -> Table -> [Row]
+getRowsFromColValue col cell [] = []
+getRowsFromColValue col cell (row:rows) | cell == (row!!col) = row : getRowsFromColValue col cell rows
+                                        | otherwise = getRowsFromColValue col cell rows
+
 -- getTableFromLimit
         -- @brief:
         -- @params: 
@@ -571,6 +582,7 @@ getTableFromOffset offset table = drop offset table
         -- @brief:
         -- @params: 
         -- @return:
+getTableFromLast :: Int -> Table -> Table
 getTableFromLast lastNum table = drop ((length table) - (lastNum)) table
 
 
@@ -636,6 +648,27 @@ getTableWidth table = length (table!!0)
 getNullRow :: Int -> Row
 getNullRow 0 = []
 getNullRow width = "" : (getNullRow (width-1))
+
+
+-- interleave
+        -- @brief:
+        -- @params: 
+        -- @return:
+interleave :: [a] -> [a] -> [a]
+interleave xs ys = concat (zipWith (\x y -> [x]++[y]) xs ys)
+
+
+-- interleaveAll
+        -- @brief:
+        -- @params: 
+        -- @return:
+interleaveAll :: [a] -> [a] -> [a]
+interleaveAll xs ys = (interleave xs ys) ++ extraElements
+        where
+                extraElements | length xs == length ys = []
+                              | length xs > length ys = drop (length ys) xs
+                              | length xs < length ys = drop (length xs) ys
+
 
 
 -- ============================================ --
