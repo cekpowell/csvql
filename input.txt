@@ -1,1 +1,1 @@
-RETURN (JOIN OUTER ON LEFT.@0 == RIGHT.@0 (READ "test.csv") (READ "test2.csv"));
+RETURN SELECT * READ "test.csv";

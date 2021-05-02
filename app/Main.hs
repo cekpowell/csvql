@@ -12,6 +12,7 @@ import Control.Exception
 import System.IO
 import Data.List
 import Data.List.Split
+import Data.Char (isSpace)
 
 -- ADDITIONAL DEPENDENCIES 
         -- Data.List.Split
@@ -129,9 +130,18 @@ eval (Return tableType) vars           = getTableFromType tableType vars
         -- @params: 
         -- @return:
 getTableFromType :: TableType -> Vars -> IO Table
-getTableFromType (Read filename) vars           = getTableFromFile filename
-getTableFromType (Var varName) vars             = return (getTableFromVar varName vars)
-getTableFromType (Function functionTable) vars  = getTableFromFunction functionTable vars
+getTableFromType (Read filename) vars           = do 
+                                                        table <- getTableFromFile filename
+                                                        let formattedTable = formatTable table
+                                                        return formattedTable              
+getTableFromType (Var varName) vars             = do 
+                                                        let table = getTableFromVar varName vars
+                                                        let formattedTable = formatTable table
+                                                        return formattedTable
+getTableFromType (Function functionTable) vars  = do 
+                                                        table <- getTableFromFunction functionTable vars
+                                                        let formattedTable = formatTable table
+                                                        return formattedTable
 
 ---------------------
 -- TABLE FROM FILE --
@@ -595,6 +605,39 @@ getTableFromLast lastNum table = drop ((length table) - (lastNum)) table
 -- ============================================ --
 
 
+-- formatTable
+        -- @brief:
+        -- @params: 
+        -- @return:
+formatTable :: Table -> Table
+formatTable table = let trimmedTable = trimTable table
+                    in trimmedTable
+
+-- trimTable
+        -- @brief:
+        -- @params: 
+        -- @return:
+trimTable :: Table -> Table
+trimTable [] = []
+trimTable (row:rows) = (trimRow row) : (trimTable rows)
+
+-- trimRow
+        -- @brief:
+        -- @params: 
+        -- @return:
+trimRow :: Row -> Row
+trimRow [] = []
+trimRow (cell:cells) = trimCell cell : trimRow cells
+
+-- trim
+        -- @brief:
+        -- @params: 
+        -- @return:
+trimCell :: String -> String
+trimCell = f . f
+   where f = reverse . dropWhile isSpace
+
+
 
 
 -- updateVars
@@ -668,6 +711,7 @@ interleaveAll xs ys = (interleave xs ys) ++ extraElements
                 extraElements | length xs == length ys = []
                               | length xs > length ys = drop (length ys) xs
                               | length xs < length ys = drop (length xs) ys
+
 
 
 
