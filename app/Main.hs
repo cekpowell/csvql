@@ -421,10 +421,10 @@ getTableFromJoin (JoinRight (TableComparison lcol rcol) ltableType rtableType) v
                                                                                 rtable <- getTableFromType rtableType vars
                                                                                 let joinTable = getTableFromRightJoin lcol rcol ltable rtable
                                                                                 return joinTable
-getTableFromJoin (JoinFull (TableComparison lcol rcol) ltableType rtableType) vars = do 
+getTableFromJoin (JoinOuter (TableComparison lcol rcol) ltableType rtableType) vars = do 
                                                                                 ltable <- getTableFromType ltableType vars
                                                                                 rtable <- getTableFromType rtableType vars
-                                                                                let joinTable = getTableFromFullJoin lcol rcol ltable rtable
+                                                                                let joinTable = getTableFromOuterJoin lcol rcol ltable rtable
                                                                                 return joinTable
 
 -- getTableFromInnerJoin
@@ -437,15 +437,15 @@ getTableFromInnerJoin lcol rcol (lrow:lrows) rtable | neededRows == [] = (getTab
                                                     | otherwise = neededRows ++ (getTableFromInnerJoin lcol rcol lrows rtable)
         where
                 matchedRRows = (getRowsFromColValue rcol (lrow!!lcol) rtable) -- every row in rtable that has the same column value as ltable
-                neededRows = getRowsFromRMatches lrow matchedRRows -- the row in ltable joined to every row it matches in rtable
+                neededRows = getLJoinedRows lrow matchedRRows -- the row in ltable joined to every row it matches in rtable
 
-getRowsFromRMatches :: Row -> [Row] -> [Row]
-getRowsFromRMatches row [] = []
-getRowsFromRMatches row (matchedRow:matches) = (row ++ matchedRow) : (getRowsFromRMatches row matches)
+getLJoinedRows :: Row -> [Row] -> [Row]
+getLJoinedRows row [] = []
+getLJoinedRows row (matchedRow:matches) = (row ++ matchedRow) : (getLJoinedRows row matches)
 
-getRowsFromLMatches :: [Row] -> Row -> [Row]
-getRowsFromLMatches [] row = []
-getRowsFromLMatches (matchedRow:matches) row  = (matchedRow ++ row) : (getRowsFromLMatches matches row)
+getRJoinedRows :: [Row] -> Row -> [Row]
+getRJoinedRows [] row = []
+getRJoinedRows (matchedRow:matches) row  = (matchedRow ++ row) : (getRJoinedRows matches row)
 
 -- getTableFromLeftJoin
         -- @brief:
@@ -457,7 +457,7 @@ getTableFromLeftJoin lcol rcol (lrow:lrows) rtable | neededRows == []  = (lrow +
                                                    | otherwise         = neededRows ++ (getTableFromLeftJoin lcol rcol lrows rtable)
         where
                 matchedRRows = (getRowsFromColValue rcol (lrow!!lcol) rtable)
-                neededRows = getRowsFromRMatches lrow matchedRRows 
+                neededRows = getLJoinedRows lrow matchedRRows 
                 nullRRow = getNullRow (getTableWidth rtable) 
 
 -- getTableFromRightJoin
@@ -470,15 +470,15 @@ getTableFromRightJoin lcol rcol ltable (rrow:rrows) | neededRows == [] = (nullLR
                                                     | otherwise         = neededRows ++ (getTableFromRightJoin lcol rcol ltable rrows)
         where
                 matchedLRows = (getRowsFromColValue lcol (rrow!!rcol) ltable)
-                neededRows = getRowsFromLMatches matchedLRows rrow 
+                neededRows = getRJoinedRows matchedLRows rrow 
                 nullLRow = getNullRow (getTableWidth ltable) 
 
--- getTableFromFullJoin
+-- getTableFromOuterJoin
         -- @brief:
         -- @params: 
         -- @return:
-getTableFromFullJoin :: Int -> Int -> Table -> Table -> Table
-getTableFromFullJoin lcol rcol ltable rtable = nub (leftJoinTable ++ rightJoinTable)
+getTableFromOuterJoin :: Int -> Int -> Table -> Table -> Table
+getTableFromOuterJoin lcol rcol ltable rtable = nub (leftJoinTable ++ rightJoinTable)
         where
                 leftJoinTable = getTableFromLeftJoin lcol rcol ltable rtable
                 rightJoinTable = getTableFromRightJoin lcol rcol ltable rtable

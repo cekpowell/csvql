@@ -25,6 +25,7 @@ import Tokens
     Inner    { TokenInner _ }
     Left     { TokenLeft _ }
     Right    { TokenRight _ }
+    Outer    { TokenOuter _ }
     Full     { TokenFull _ }
     On       { TokenOn _ }
     Order    { TokenOrder _ }
@@ -90,7 +91,7 @@ UnionFunction : Union TableType TableType { UnionUnique $2 $3 }
 JoinFunction : Join Inner On TableComparison TableType TableType { JoinInner $4 $5 $6 }
              | Join Left On TableComparison TableType TableType { JoinLeft $4 $5 $6 }
              | Join Right On TableComparison TableType TableType { JoinRight $4 $5 $6 }
-             | Join Full On TableComparison TableType TableType { JoinFull $4 $5 $6 }
+             | Join Outer On TableComparison TableType TableType { JoinOuter $4 $5 $6 }
 
 TableComparison : Left '.' ColumnRef "==" Right '.' ColumnRef { TableComparison $3 $7 }
 
@@ -176,7 +177,7 @@ data UnionFunction = UnionUnique TableType TableType
 data JoinFunction = JoinInner TableComparison TableType TableType 
                   | JoinLeft TableComparison TableType TableType 
                   | JoinRight TableComparison TableType TableType 
-                  | JoinFull TableComparison TableType TableType 
+                  | JoinOuter TableComparison TableType TableType 
                     deriving (Show, Eq)
 
 data TableComparison = TableComparison Int Int

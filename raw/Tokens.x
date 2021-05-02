@@ -29,6 +29,7 @@ $white+    ;
   INNER         { \p s -> TokenInner p }
   LEFT          { \p s -> TokenLeft p }
   RIGHT         { \p s -> TokenRight p }
+  OUTER         { \p s -> TokenOuter p }
   FULL          { \p s -> TokenFull p }
   ON            { \p s -> TokenOn p }
   ORDER         { \p s -> TokenOrder p }
@@ -86,6 +87,7 @@ data Token = TokenRead AlexPosn
               | TokenInner AlexPosn
               | TokenLeft AlexPosn
               | TokenRight AlexPosn
+              | TokenOuter AlexPosn
               | TokenFull AlexPosn
               | TokenOn AlexPosn
 
@@ -147,6 +149,7 @@ tokenPosn (TokenJoin (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenInner (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLeft (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenRight (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenOuter (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenFull (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenOn (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 
