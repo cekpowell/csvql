@@ -416,26 +416,51 @@ getTableFromUnion (UnionAll tableType1 tableType2) vars = do
         -- @params: 
         -- @return:
 getTableFromJoin :: JoinFunction -> Vars -> IO Table
+getTableFromJoin (JoinStandard ltableType rtableType) vars                          = do 
+                                                                                        ltable <- getTableFromType ltableType vars
+                                                                                        rtable <- getTableFromType rtableType vars
+                                                                                        let joinTable = getTableFromStandardJoin ltable (getTableWidth ltable) rtable (getTableWidth rtable)
+                                                                                        return joinTable
 getTableFromJoin (JoinInner (TableComparison lcol rcol) ltableType rtableType) vars = do 
-                                                                                ltable <- getTableFromType ltableType vars
-                                                                                rtable <- getTableFromType rtableType vars
-                                                                                let joinTable = getTableFromInnerJoin lcol rcol ltable rtable
-                                                                                return joinTable
+                                                                                        ltable <- getTableFromType ltableType vars
+                                                                                        rtable <- getTableFromType rtableType vars
+                                                                                        let joinTable = getTableFromInnerJoin lcol rcol ltable rtable
+                                                                                        return joinTable
 getTableFromJoin (JoinLeft (TableComparison lcol rcol) ltableType rtableType) vars = do 
-                                                                                ltable <- getTableFromType ltableType vars
-                                                                                rtable <- getTableFromType rtableType vars
-                                                                                let joinTable = getTableFromLeftJoin lcol rcol ltable rtable
-                                                                                return joinTable
+                                                                                        ltable <- getTableFromType ltableType vars
+                                                                                        rtable <- getTableFromType rtableType vars
+                                                                                        let joinTable = getTableFromLeftJoin lcol rcol ltable rtable
+                                                                                        return joinTable
 getTableFromJoin (JoinRight (TableComparison lcol rcol) ltableType rtableType) vars = do 
-                                                                                ltable <- getTableFromType ltableType vars
-                                                                                rtable <- getTableFromType rtableType vars
-                                                                                let joinTable = getTableFromRightJoin lcol rcol ltable rtable
-                                                                                return joinTable
+                                                                                        ltable <- getTableFromType ltableType vars
+                                                                                        rtable <- getTableFromType rtableType vars
+                                                                                        let joinTable = getTableFromRightJoin lcol rcol ltable rtable
+                                                                                        return joinTable
 getTableFromJoin (JoinOuter (TableComparison lcol rcol) ltableType rtableType) vars = do 
-                                                                                ltable <- getTableFromType ltableType vars
-                                                                                rtable <- getTableFromType rtableType vars
-                                                                                let joinTable = getTableFromOuterJoin lcol rcol ltable rtable
-                                                                                return joinTable
+                                                                                        ltable <- getTableFromType ltableType vars
+                                                                                        rtable <- getTableFromType rtableType vars
+                                                                                        let joinTable = getTableFromOuterJoin lcol rcol ltable rtable
+                                                                                        return joinTable
+getTableFromJoin (JoinFull ltableType rtableType) vars                              = do 
+                                                                                        ltable <- getTableFromType ltableType vars
+                                                                                        rtable <- getTableFromType rtableType vars
+                                                                                        let joinTable = getTableFromFullJoin ltable rtable
+                                                                                        return joinTable
+
+-- getTableFromStandard
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromStandardJoin :: Table -> Int -> Table -> Int -> Table
+getTableFromStandardJoin [] lwidth [] rwidth = []
+getTableFromStandardJoin (lrow:lrows) lwidth [] rwidth = (lrow ++ nullRRow) : (getTableFromStandardJoin lrows lwidth [] rwidth)
+        where
+                nullRRow = getNullRow rwidth
+getTableFromStandardJoin [] lwidth (rrow:rrows) rwidth = (nullLRow ++ rrow) : (getTableFromStandardJoin [] lwidth rrows rwidth)
+        where
+                nullLRow = getNullRow lwidth
+getTableFromStandardJoin (lrow:lrows) lwidth (rrow:rrows) rwidth = (lrow ++ rrow) : (getTableFromStandardJoin lrows lwidth rrows rwidth) 
+
 
 -- getTableFromInnerJoin
         -- @brief:
@@ -493,7 +518,17 @@ getTableFromOuterJoin lcol rcol ltable rtable = nub (leftJoinTable ++ rightJoinT
                 leftJoinTable = getTableFromLeftJoin lcol rcol ltable rtable
                 rightJoinTable = getTableFromRightJoin lcol rcol ltable rtable
 
+-- getTableFromFullJoin
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromFullJoin :: Table -> Table -> Table
+getTableFromFullJoin [] table         = []
+getTableFromFullJoin (row:rows) table = joinedRows ++ (getTableFromFullJoin rows table)
+        where
+                joinedRows = getLJoinedRows row table
         
+
 ------------
 -- FORMAT -- 
 ------------
@@ -682,7 +717,8 @@ getLinesFromTable (row:rows) = newRow : (getLinesFromTable rows)
         -- @params: 
         -- @return:
 getTableWidth :: Table -> Int
-getTableWidth table = length (table!!0) 
+getTableWidth []    = 0
+getTableWidth table = length (table!!0) -- CAUSES PROBLEMS WHEN INPUT FILE IS EMPTY
 
 -- getNullRow
         -- @brief:

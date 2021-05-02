@@ -1,1 +1,1 @@
-RETURN SELECT * READ "test.csv";
+RETURN JOIN FULL READ "test.csv" READ "test2.csv";

@@ -88,10 +88,12 @@ InsertFunction : Insert Values List(Str) TableType { InsertValues $3 $4 }
 UnionFunction : Union TableType TableType { UnionUnique $2 $3 }
               | Union All TableType TableType { UnionAll $3 $4 }
 
-JoinFunction : Join Inner On TableComparison TableType TableType { JoinInner $4 $5 $6 }
+JoinFunction : Join TableType TableType { JoinStandard $2 $3 }
+             | Join Inner On TableComparison TableType TableType { JoinInner $4 $5 $6 }
              | Join Left On TableComparison TableType TableType { JoinLeft $4 $5 $6 }
              | Join Right On TableComparison TableType TableType { JoinRight $4 $5 $6 }
              | Join Outer On TableComparison TableType TableType { JoinOuter $4 $5 $6 }
+             | Join Full TableType TableType {JoinFull $3 $4 }
 
 TableComparison : Left '.' ColumnRef "==" Right '.' ColumnRef { TableComparison $3 $7 }
 
@@ -174,10 +176,12 @@ data UnionFunction = UnionUnique TableType TableType
                    | UnionAll TableType TableType 
                      deriving (Show, Eq)
 
-data JoinFunction = JoinInner TableComparison TableType TableType 
+data JoinFunction = JoinStandard TableType TableType
+                  | JoinInner TableComparison TableType TableType 
                   | JoinLeft TableComparison TableType TableType 
                   | JoinRight TableComparison TableType TableType 
                   | JoinOuter TableComparison TableType TableType 
+                  | JoinFull TableType TableType
                     deriving (Show, Eq)
 
 data TableComparison = TableComparison Int Int
