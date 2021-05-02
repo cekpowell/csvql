@@ -1,3 +1,1 @@
-LET var1 = READ "test.csv";
-LET var2 = ORDER BY [@2, @1] ASC var1;
-RETURN var2;
+RETURN (JOIN INNER ON LEFT.@0 == RIGHT.@0 (READ "test.csv") (READ "test2.csv"));

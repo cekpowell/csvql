@@ -78,7 +78,7 @@ mainPrettyPrint = do
                         putStrLn("\n")
                         
                         let tokens = alexScanTokens sourceText
-                        --putStrLn ("Lexed as : " ++ (show tokens))
+                        putStrLn ("Lexed as : " ++ (show tokens))
                         let exp = parseCalc tokens
                         putStrLn ("Parsed as : " ++ (show exp))
 
@@ -173,7 +173,7 @@ getTableFromFunction (Insert insertFunction) vars = getTableFromInsert insertFun
 getTableFromFunction (Delete deleteFunction) vars = getTableFromDelete deleteFunction vars
 getTableFromFunction (Format formatFunction) vars = getTableFromFormat formatFunction vars
 getTableFromFunction (Union unionFunction) vars   = getTableFromUnion unionFunction vars 
-
+getTableFromFunction (Join joinFunction) vars     = getTableFromJoin joinFunction vars
 
 
 
@@ -377,6 +377,10 @@ satisfyOperator NotEq val1 val2          = val1 /= val2
 -- UNION -- 
 -----------
 
+-- getTableFromUnion
+        -- @brief:
+        -- @params: 
+        -- @return:
 getTableFromUnion :: UnionFunction -> Vars -> IO Table
 getTableFromUnion (UnionUnique tableType1 tableType2) vars    = do
                                                                 table1 <- getTableFromType tableType1 vars
@@ -388,6 +392,49 @@ getTableFromUnion (UnionAll tableType1 tableType2) vars = do
                                                                 table2 <- getTableFromType tableType2 vars
                                                                 let unionTable = table1 ++ table2
                                                                 return unionTable
+
+
+----------
+-- JOIN -- 
+----------
+
+-- getTableFromJoin
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromJoin :: JoinFunction -> Vars -> IO Table
+getTableFromJoin (JoinInner (TableComparison lcol rcol) ltableType rtableType) vars = do 
+                                                                                ltable <- getTableFromType ltableType vars
+                                                                                rtable <- getTableFromType rtableType vars
+                                                                                let joinTable = getTableFromInnerJoin lcol rcol ltable rtable
+                                                                                return joinTable
+getTableFromJoin (JoinLeft (TableComparison lcol rcol) ltableType rtableType) vars = do 
+                                                                                ltable <- getTableFromType ltableType vars
+                                                                                rtable <- getTableFromType rtableType vars
+                                                                                let joinTable = getTableFromInnerJoin lcol rcol ltable rtable
+                                                                                return joinTable
+getTableFromJoin (JoinRight (TableComparison lcol rcol) ltableType rtableType) vars = do 
+                                                                                ltable <- getTableFromType ltableType vars
+                                                                                rtable <- getTableFromType rtableType vars
+                                                                                let joinTable = getTableFromInnerJoin lcol rcol ltable rtable
+                                                                                return joinTable
+getTableFromJoin (JoinFull (TableComparison lcol rcol) ltableType rtableType) vars = do 
+                                                                                ltable <- getTableFromType ltableType vars
+                                                                                rtable <- getTableFromType rtableType vars
+                                                                                let joinTable = getTableFromInnerJoin lcol rcol ltable rtable
+                                                                                return joinTable
+
+-- getTableFromInnerJoin
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromInnerJoin :: Int -> Int -> Table -> Table -> Table
+getTableFromInnerJoin lcol rcol [] rtable         = []
+getTableFromInnerJoin lcol rcol (lrow:lrows) rtable | matchedRow == [] = [] -- couldn't find a matching row for the right table
+                                                    | otherwise = (lrow ++ matchedRow) : (getTableFromInnerJoin lcol rcol lrows rtable)
+        where
+                matchedRow = (getRowFromColValue rcol (lrow!!lcol) rtable )
+
 
 ------------
 -- FORMAT -- 
@@ -455,6 +502,7 @@ getTableFromSortedCol col (cell:cells) table = (getRowFromColValue col cell tabl
         -- @params: 
         -- @return:
 getRowFromColValue :: Int -> Cell -> Table -> Row
+getRowFromColValue col cell [] = []
 getRowFromColValue col cell (row:rows) | cell == (row!!col) = row
                                        | otherwise = getRowFromColValue col cell rows
 

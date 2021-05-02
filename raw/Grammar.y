@@ -21,6 +21,12 @@ import Tokens
     Or       { TokenOr _ }
     Union    { TokenUnion _ }
     All      { TokenAll _ }
+    Join     { TokenJoin _ }
+    Inner    { TokenInner _ }
+    Left     { TokenLeft _ }
+    Right    { TokenRight _ }
+    Full     { TokenFull _ }
+    On       { TokenOn _ }
     Order    { TokenOrder _ }
     By       { TokenBy _ }
     Asc      { TokenAsc _ }
@@ -39,6 +45,7 @@ import Tokens
     '['      { TokenLSquare _ }
     ']'      { TokenRSquare _ }
     ','      { TokenComma _ }     
+    '.'      { TokenDot _ }
     '*'      { TokenAst _ } 
     "@"      { TokenAt _ } 
     '('      { TokenLParen _ }
@@ -62,6 +69,7 @@ FunctionTable : SelectFunction { Select $1 }
               | InsertFunction { Insert $1 }
               | DeleteFunction { Delete $1 }
               | UnionFunction  { Union $1 }
+              | JoinFunction   { Join $1 }
               | FormatFunction { Format $1 }
 
 SelectFunction : Select '*' TableType { SelectAll $3 }
@@ -78,8 +86,16 @@ InsertFunction : Insert Values List(Str) TableType { InsertValues $3 $4 }
 
 UnionFunction : Union TableType TableType { UnionUnique $2 $3 }
               | Union All TableType TableType { UnionAll $3 $4 }
-               
 
+JoinFunction : Join Inner On TableComparison TableType TableType { JoinInner $4 $5 $6 }
+             | Join Left On TableComparison TableType TableType { JoinLeft $4 $5 $6 }
+             | Join Right On TableComparison TableType TableType { JoinRight $4 $5 $6 }
+             | Join Full On TableComparison TableType TableType { JoinFull $4 $5 $6 }
+
+TableComparison : Left '.' ColumnRef "==" Right '.' ColumnRef { TableComparison $3 $7 }
+
+TableColumnRef : Var '.' ColumnRef { TableColumnRef $1 $3 }
+               
 FormatFunction: Order By Direction TableType { OrderBy $3 $4 }
               | Order By List(ColumnRef) Direction TableType { OrderByCol $3 $4 $5 }
               | Limit int TableType { Limit $2 $3 }
@@ -134,6 +150,7 @@ data FunctionTable = Select SelectFunction
                    | Insert InsertFunction
                    | Delete DeleteFunction
                    | Union UnionFunction
+                   | Join JoinFunction
                    | Format FormatFunction
                      deriving (Show, Eq)
 
@@ -155,6 +172,18 @@ data InsertFunction = InsertValues [String] TableType
 data UnionFunction = UnionUnique TableType TableType
                    | UnionAll TableType TableType 
                      deriving (Show, Eq)
+
+data JoinFunction = JoinInner TableComparison TableType TableType 
+                  | JoinLeft TableComparison TableType TableType 
+                  | JoinRight TableComparison TableType TableType 
+                  | JoinFull TableComparison TableType TableType 
+                    deriving (Show, Eq)
+
+data TableComparison = TableComparison Int Int
+                       deriving (Show, Eq)
+
+data TableColumnRef = TableColumnRef String Int
+                      deriving (Show, Eq)
 
 data FormatFunction = OrderBy Direction TableType
                     | OrderByCol [Int] Direction TableType

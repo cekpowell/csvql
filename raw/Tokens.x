@@ -25,6 +25,12 @@ $white+    ;
   OR            { \p s -> TokenOr p }
   UNION         { \p s -> TokenUnion p }
   ALL           { \p s -> TokenAll p }
+  JOIN          { \p s -> TokenJoin p }
+  INNER         { \p s -> TokenInner p }
+  LEFT          { \p s -> TokenLeft p }
+  RIGHT         { \p s -> TokenRight p }
+  FULL          { \p s -> TokenFull p }
+  ON            { \p s -> TokenOn p }
   ORDER         { \p s -> TokenOrder p }
   BY            { \p s -> TokenBy p }
   ASC           { \p s -> TokenAsc p }
@@ -43,6 +49,7 @@ $white+    ;
   "["           { \p s -> TokenLSquare p }
   "]"           { \p s -> TokenRSquare p }
   ","           { \p s -> TokenComma p }
+  "."           { \p s -> TokenDot p }
   "*"           { \p s -> TokenAst p }
   "@"           { \p s -> TokenAt p } 
   "("           { \p s -> TokenLParen p }
@@ -58,17 +65,30 @@ $white+    ;
 data Token = TokenRead AlexPosn 
               | TokenLet AlexPosn
               | TokenReturn AlexPosn
+
               | TokenSelect AlexPosn
+
               | TokenInsert AlexPosn
               | TokenValues AlexPosn
               | TokenColumn AlexPosn
+
               | TokenDelete AlexPosn
+
               | TokenWhere AlexPosn
               | TokenNot AlexPosn
               | TokenAnd AlexPosn
               | TokenOr AlexPosn 
+
               | TokenUnion AlexPosn
               | TokenAll AlexPosn
+
+              | TokenJoin AlexPosn
+              | TokenInner AlexPosn
+              | TokenLeft AlexPosn
+              | TokenRight AlexPosn
+              | TokenFull AlexPosn
+              | TokenOn AlexPosn
+
               | TokenOrder AlexPosn
               | TokenBy AlexPosn
               | TokenAsc AlexPosn
@@ -77,20 +97,24 @@ data Token = TokenRead AlexPosn
               | TokenOffset AlexPosn
               | TokenLast AlexPosn
               | TokenAssign AlexPosn
+
               | TokenEq AlexPosn
               | TokenLessThan AlexPosn
               | TokenGreaterThan AlexPosn
               | TokenLessThanEq AlexPosn
               | TokenGreaterThanEq AlexPosn
               | TokenNotEq AlexPosn
+
               | TokenSep AlexPosn
               | TokenLSquare AlexPosn
               | TokenRSquare AlexPosn
               | TokenComma AlexPosn
+              | TokenDot AlexPosn
               | TokenAst AlexPosn
               | TokenAt AlexPosn
               | TokenLParen AlexPosn
               | TokenRParen AlexPosn
+
               | TokenInt AlexPosn Int
               | TokenFilename AlexPosn String
               | TokenStr AlexPosn String
@@ -99,19 +123,33 @@ data Token = TokenRead AlexPosn
 
 tokenPosn :: Token -> String
 tokenPosn (TokenRead (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+
 tokenPosn (TokenLet (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenReturn (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+
 tokenPosn (TokenSelect (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+
 tokenPosn (TokenInsert (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenValues (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenColumn (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+
 tokenPosn (TokenDelete (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+
 tokenPosn (TokenWhere (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenNot (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAnd (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenOr (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+
 tokenPosn (TokenUnion (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAll (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+
+tokenPosn (TokenJoin (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenInner (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenLeft (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenRight (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenFull (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenOn (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+
 tokenPosn (TokenOrder (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenBy (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAsc (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
@@ -119,21 +157,26 @@ tokenPosn (TokenDesc (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLimit (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenOffset (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLast (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+
 tokenPosn (TokenAssign (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+
 tokenPosn (TokenEq (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLessThan (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenGreaterThan (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLessThanEq (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenGreaterThanEq (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenNotEq (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+
 tokenPosn (TokenSep (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLSquare (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenRSquare (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenComma (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenDot (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAst (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAt (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLParen (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenRParen (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+
 tokenPosn (TokenInt (AlexPn a l c) _) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenFilename (AlexPn a l c) _) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenStr (AlexPn a l c) _) = show(l) ++ ":" ++ show(c)
