@@ -1,1 +1,1 @@
-RETURN (JOIN RIGHT ON LEFT.@0 == RIGHT.@0 (READ "test.csv") (READ "test2.csv"));
+RETURN (JOIN FULL ON LEFT.@0 == RIGHT.@0 (READ "test.csv") (READ "test2.csv"));

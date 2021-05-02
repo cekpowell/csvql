@@ -78,15 +78,17 @@ mainPrettyPrint = do
                         putStrLn("\n")
                         
                         let tokens = alexScanTokens sourceText
+                        --putStrLn("\n")
                         --putStrLn ("Lexed as : " ++ (show tokens))
+                        --putStrLn("\n")
                         let exp = parseCalc tokens
-                        putStrLn ("Parsed as : " ++ (show exp))
-
+                        --putStrLn("\n")
+                        --putStrLn ("Parsed as : " ++ (show exp))
+                        --putStrLn("\n")
 
                         result <- eval exp []
                         putStrLn("Program output : ")
                         putStrLn("\n")
-                        putStrLn(show result)
                         printTable result
                         putStrLn("\n")
 
@@ -422,7 +424,7 @@ getTableFromJoin (JoinRight (TableComparison lcol rcol) ltableType rtableType) v
 getTableFromJoin (JoinFull (TableComparison lcol rcol) ltableType rtableType) vars = do 
                                                                                 ltable <- getTableFromType ltableType vars
                                                                                 rtable <- getTableFromType rtableType vars
-                                                                                let joinTable = getTableFromInnerJoin lcol rcol ltable rtable
+                                                                                let joinTable = getTableFromFullJoin lcol rcol ltable rtable
                                                                                 return joinTable
 
 -- getTableFromInnerJoin
@@ -460,6 +462,26 @@ getTableFromRightJoin lcol rcol ltable (rrow:rrows) | matchedLRow == [] = (nullL
                 matchedLRow = (getRowFromColValue lcol (rrow!!rcol) ltable )
                 nullLRow = getNullRow (getTableWidth ltable) 
 
+-- getTableFromFullJoin
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromFullJoin :: Int -> Int -> Table -> Table -> Table
+getTableFromFullJoin lcol rcol ltable rtable = nub (interleaveAll leftJoinTable rightJoinTable)
+        where
+                leftJoinTable = getTableFromLeftJoin lcol rcol ltable rtable
+                rightJoinTable = getTableFromRightJoin lcol rcol ltable rtable
+
+interleave :: [a] -> [a] -> [a]
+interleave xs ys = concat (zipWith (\x y -> [x]++[y]) xs ys)
+
+interleaveAll :: [a] -> [a] -> [a]
+interleaveAll xs ys = (interleave xs ys) ++ extraElements
+        where
+                extraElements | length xs == length ys = []
+                              | length xs > length ys = drop (length ys) xs
+                              | length xs < length ys = drop (length xs) ys
+        
 ------------
 -- FORMAT -- 
 ------------
