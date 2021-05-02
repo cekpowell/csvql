@@ -78,7 +78,7 @@ mainPrettyPrint = do
                         putStrLn("\n")
                         
                         let tokens = alexScanTokens sourceText
-                        putStrLn ("Lexed as : " ++ (show tokens))
+                        --putStrLn ("Lexed as : " ++ (show tokens))
                         let exp = parseCalc tokens
                         putStrLn ("Parsed as : " ++ (show exp))
 
@@ -86,6 +86,7 @@ mainPrettyPrint = do
                         result <- eval exp []
                         putStrLn("Program output : ")
                         putStrLn("\n")
+                        putStrLn(show result)
                         printTable result
                         putStrLn("\n")
 
@@ -411,7 +412,7 @@ getTableFromJoin (JoinInner (TableComparison lcol rcol) ltableType rtableType) v
 getTableFromJoin (JoinLeft (TableComparison lcol rcol) ltableType rtableType) vars = do 
                                                                                 ltable <- getTableFromType ltableType vars
                                                                                 rtable <- getTableFromType rtableType vars
-                                                                                let joinTable = getTableFromInnerJoin lcol rcol ltable rtable
+                                                                                let joinTable = getTableFromLeftJoin lcol rcol ltable rtable
                                                                                 return joinTable
 getTableFromJoin (JoinRight (TableComparison lcol rcol) ltableType rtableType) vars = do 
                                                                                 ltable <- getTableFromType ltableType vars
@@ -430,11 +431,22 @@ getTableFromJoin (JoinFull (TableComparison lcol rcol) ltableType rtableType) va
         -- @return:
 getTableFromInnerJoin :: Int -> Int -> Table -> Table -> Table
 getTableFromInnerJoin lcol rcol [] rtable         = []
-getTableFromInnerJoin lcol rcol (lrow:lrows) rtable | matchedRow == [] = [] -- couldn't find a matching row for the right table
-                                                    | otherwise = (lrow ++ matchedRow) : (getTableFromInnerJoin lcol rcol lrows rtable)
+getTableFromInnerJoin lcol rcol (lrow:lrows) rtable | matchedRRow == [] = (getTableFromInnerJoin lcol rcol lrows rtable) -- couldn't find a matching row for the right table
+                                                    | otherwise = (lrow ++ matchedRRow) : (getTableFromInnerJoin lcol rcol lrows rtable)
         where
-                matchedRow = (getRowFromColValue rcol (lrow!!lcol) rtable )
+                matchedRRow = (getRowFromColValue rcol (lrow!!lcol) rtable )
 
+-- getTableFromLeftJoin
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromLeftJoin :: Int -> Int -> Table -> Table -> Table 
+getTableFromLeftJoin lcol rcol [] rtable                               = []
+getTableFromLeftJoin lcol rcol (lrow:lrows) rtable | matchedRRow == [] = (lrow ++ nullRRow) : (getTableFromLeftJoin lcol rcol lrows rtable) -- couldn't find a matching row for the right table, so using nulls
+                                                   | otherwise         = (lrow ++ matchedRRow) : (getTableFromLeftJoin lcol rcol lrows rtable)
+        where
+                matchedRRow = (getRowFromColValue rcol (lrow!!lcol) rtable )
+                nullRRow = getNullRow (getTableWidth rtable) 
 
 ------------
 -- FORMAT -- 
@@ -576,7 +588,20 @@ getLinesFromTable (row:rows) = newRow : (getLinesFromTable rows)
         where
                 newRow = intercalate "," row
 
+-- getTableWidth
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableWidth :: Table -> Int
+getTableWidth table = length (table!!0) 
 
+-- getNullRow
+        -- @brief:
+        -- @params: 
+        -- @return:
+getNullRow :: Int -> Row
+getNullRow 0 = []
+getNullRow width = "" : (getNullRow (width-1))
 
 
 -- ============================================ --
@@ -619,7 +644,7 @@ printRow (cell:cells) | cells == [] = do putStr cell
                       | otherwise   = do putStr cell
                                          putStr ", "
                                          printRow cells
- 
+                                         
 printLines :: [String] -> IO ()
 printLines [] = return ()
 printLines (l:ls) = do putStrLn l
