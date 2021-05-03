@@ -255,32 +255,31 @@ selectRowCols (col:cols) row   = [(row!!col)] ++ (selectRowCols cols row)
         -- @params: 
         -- @return:
 getTableFromInsert :: InsertFunction -> Vars -> IO Table
-getTableFromInsert (InsertValues vals tableType) vars       = do
+getTableFromInsert (InsertValues vals tableType) vars   = do
                                                                 table <- getTableFromType tableType vars
                                                                 return (table ++ [vals])
-getTableFromInsert (InsertColumn colNum val tableType) vars = do
+getTableFromInsert (InsertColumn colNum tableType) vars = do
                                                                 table <- getTableFromType tableType vars
-                                                                let insertTable = insertColumnTable colNum val table
+                                                                let insertTable = insertColumnTable colNum table
                                                                 return insertTable
 
 -- insertColumnTable
         -- @brief:
         -- @params: The Int is the index of the column in the new table (i.e., input of 1 means new table will have new column at index 1).
         -- @return:
-insertColumnTable :: Int -> String -> Table -> Table
-insertColumnTable colNum val []         = []
-insertColumnTable colNum val (row:rows) = newRow : (insertColumnTable colNum val rows)
+insertColumnTable :: Int -> Table -> Table
+insertColumnTable colNum []         = []
+insertColumnTable colNum (row:rows) = newRow : (insertColumnTable colNum rows)
         where
-                newRow = insertColumnRow colNum val row
+                newRow = insertColumnRow colNum row
 
 -- insertColumnRow
         -- @brief:
         -- @params: 
         -- @return:
-insertColumnRow :: Int -> String -> Row -> Row
-insertColumnRow 0 val row               = val:row
-insertColumnRow colNum val (cell:cells) = cell : (insertColumnRow (colNum - 1) val cells)
-
+insertColumnRow :: Int -> Row -> Row
+insertColumnRow 0 row               = (""):row
+insertColumnRow colNum (cell:cells) = cell : (insertColumnRow (colNum - 1) cells)
 
 
 ---------------

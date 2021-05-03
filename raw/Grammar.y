@@ -86,7 +86,7 @@ SelectFunction : Select '*' TableType { SelectAll $3 }
                | Select List(ColumnRef) Where List(Predicate) TableType { SelectColWhere $2 $4 $5 }
 
 InsertFunction : Insert Values List(Str) TableType { InsertValues $3 $4 }
-               | Insert Column ColumnRef Str TableType { InsertColumn $3 $4 $5}
+               | Insert Column ColumnRef TableType { InsertColumn $3 $4 }
 
 DeleteFunction : Delete TableType { DeleteAll $2}
                | Delete List(ColumnRef) TableType { DeleteCol $2 $3 }
@@ -179,7 +179,7 @@ data SelectFunction = SelectAll TableType
                       deriving (Show, Eq)
 
 data InsertFunction = InsertValues [String] TableType
-                    | InsertColumn Int String TableType
+                    | InsertColumn Int TableType
                       deriving (Show, Eq)
 
 data DeleteFunction = DeleteAll TableType

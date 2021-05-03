@@ -1,7 +1,7 @@
 LET var1 = READ "A.csv";
 LET var2 = READ "B.csv";
 
-RETURN UPDATE [@2 = "3", @0 = "hllo"] WHERE [@0 == "1"] var1;
+RETURN UPDATE [@0 = "0"] (INSERT COLUMN @0 var1);
 
 --/
 
