@@ -405,35 +405,47 @@ getTableFromUpdate (UpdateWhere assignments predicates tableType) vars = do
                                                                         let updateTable = getTableFromUpdateWhere assignments predicates table
                                                                         return updateTable
 
--- getTableFromUpdate
+-- getTableFromUpdateAll
         -- @brief:
         -- @params: 
         -- @return:
 getTableFromUpdateAll :: [Assignment] -> Table -> Table
-getTableFromUpdateAll [] table = table
-getTableFromUpdateAll (a:as) table = getTableFromUpdateAll as updatedTable
+getTableFromUpdateAll assignments [] = []
+getTableFromUpdateAll assignments (row:rows) = updatedRow : getTableFromUpdateAll assignments rows
         where
-                updatedTable = getTableFromAssignment a table
+                updatedRow = getRowFromAssignments assignments row
 
--- getTableFromUpdate
+-- getRowFromAssignment
+        -- @brief:
+        -- @params: 
+        -- @return:v
+getTableFromUpdateWhere :: [Assignment] -> [Predicate] -> Table -> Table
+getTableFromUpdateWhere assignments predicates table = let 
+                                                        tableFromWhere = getTableFromWhere predicates table
+                                                       in 
+                                                        getTableFromUpdateWhereAux assignments tableFromWhere table
+
+-- getRowFromAssignment
         -- @brief:
         -- @params: 
         -- @return:
-getTableFromAssignment :: Assignment -> Table -> Table
-getTableFromAssignment assignment [] = []
-getTableFromAssignment (Assignment col val) (row:rows) = (getRowFromAssignment col val row) : (getTableFromAssignment (Assignment col val) rows)
-
-
-getTableFromUpdateWhere :: [Assignment] -> [Predicate] -> Table -> Table
-getTableFromUpdateWhere assignments predicates table = let 
-                                                                tableFromWhere = getTableFromWhere predicates table
-                                                        in 
-                                                                getTableFromUpdateWhereAux assignments tableFromWhere table
-
 getTableFromUpdateWhereAux :: [Assignment] -> Table -> Table -> Table
-getTableFromUpdateWhereAux assignments whereTable []                     = []
-getTableFromUpdateWhereAux assignments whereTable (row:rows) | contains row whereTable = (getTableFromUpdateAll assignments [row]) ++ getTableFromUpdateWhereAux assignments whereTable rows
-                                                             | otherwise = row : getTableFromUpdateWhereAux assignments whereTable rows
+getTableFromUpdateWhereAux assignments whereTable []                                   = []
+getTableFromUpdateWhereAux assignments whereTable (row:rows) | contains row whereTable = updatedRow : restOfTable
+                                                             | otherwise               = row : restOfTable
+        where
+                updatedRow = getRowFromAssignments assignments row
+                restOfTable   = getTableFromUpdateWhereAux assignments whereTable rows
+
+-- getRowFromAssignments
+        -- @brief:
+        -- @params: 
+        -- @return:
+getRowFromAssignments :: [Assignment] -> Row -> Row
+getRowFromAssignments [] row = row
+getRowFromAssignments ((Assignment col val):assignments) row = getRowFromAssignments assignments updatedRow
+        where
+                updatedRow = getRowFromAssignment col val row
 
 -- getRowFromAssignment
         -- @brief:
@@ -442,6 +454,7 @@ getTableFromUpdateWhereAux assignments whereTable (row:rows) | contains row wher
 getRowFromAssignment :: Int -> String -> Row -> Row
 getRowFromAssignment 0 val (cell:cells)      = val:cells
 getRowFromAssignment colNum val (cell:cells) = cell : (getRowFromAssignment (colNum - 1) val cells)
+
 
 -------------------
 -- SET FUNCTIONS --
