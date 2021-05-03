@@ -16,11 +16,11 @@ import Data.Char (isSpace)
 
 -- ADDITIONAL DEPENDENCIES 
         -- Data.List.Split
-        -- "array" in CQLanguage.cabal (not sure what it's used for)
+        -- "array" in CQLanguage.cabal (not sure what it's used for?)
 
-------------------------
--- Type  Declarations -- 
-------------------------
+-----------------------
+-- TYPE DECLERATIONS -- 
+-----------------------
 
 
 type Cell = String
@@ -33,11 +33,11 @@ type Vars = [Var]
 
 
 
--- ============================================ --
--- ============================================ --
--- ============== MAIN METHODS ================ --
--- ============================================ --
--- ============================================ --
+-- ================================================================================ --
+-- ================================================================================ --
+-- ================================= MAIN METHODS ================================= --
+-- ================================================================================ --
+-- ================================================================================ --
 
 -- main
         -- @brief:
@@ -88,9 +88,10 @@ mainPrettyPrint = do
                         --putStrLn("\n")
 
                         result <- eval exp []
+
                         putStrLn("Program output : ")
                         putStrLn("\n")
-                        printTable result
+                        prettyPrintTable result
                         putStrLn("\n")
 
 
@@ -113,12 +114,11 @@ eval (Return tableType) vars           = getTableFromType tableType vars
 
 
 
--- ============================================ --
--- ============================================ --
--- ============= GETTING TABLES =============== --
--- ============================================ --
--- ============================================ --
-
+-- ================================================================================ --
+-- ================================================================================ --
+-- ================================ GETTING TABLES ================================ --
+-- ================================================================================ --
+-- ================================================================================ --
 
 
 
@@ -192,18 +192,18 @@ getTableFromFunction (Format formatFunction) vars = getTableFromFormat formatFun
 
 
 
--- ============================================ --
--- ============================================ --
--- ================ FUNCTIONS ================= --
--- ============================================ --
--- ============================================ --
+
+-- ================================================================================ --
+-- ================================================================================ --
+-- ================================== FUNCTIONS =================================== --
+-- ================================================================================ --
+-- ================================================================================ --
 
 
 
-
----------------
---- SELECT  ---
----------------
+-- ============================== -- 
+-- =========== SELECT =========== -- 
+-- ============================== -- 
 
 
 -- getTableFromSelect
@@ -245,9 +245,9 @@ selectRowCols [] row          = []
 selectRowCols (col:cols) row   = [(row!!col)] ++ (selectRowCols cols row)
 
 
-------------
--- INSERT --
-------------
+-- ============================== -- 
+-- =========== INSERT =========== -- 
+-- ============================== -- 
 
 
 -- getTableFromInsert
@@ -282,9 +282,9 @@ insertColumnRow 0 row               = (""):row
 insertColumnRow colNum (cell:cells) = cell : (insertColumnRow (colNum - 1) cells)
 
 
----------------
---- DELETE  ---
----------------
+-- ============================== -- 
+-- =========== DELETE =========== -- 
+-- ============================== -- 
 
 
 -- getTableFromDelete
@@ -331,62 +331,9 @@ deleteRowCol col currentCol (cell:cells) | col == currentCol = cells
                                          | otherwise = cell : (deleteRowCol col (currentCol + 1) cells)
 
 
------------
--- WHERE --
------------
-
-
--- getTableFromWhere
-        -- @brief:
-        -- @params: 
-        -- @return:
-getTableFromWhere :: [Predicate(ColumnComparison)] -> Table ->  Table
-getTableFromWhere [] table           = table
-getTableFromWhere (pred:preds) table = getTableFromWhere preds (getRowsFromColumnPredicate pred table)
-
--- getRowsFromColumnPredicate
-        -- @brief:
-        -- @params: 
-        -- @return:
-getRowsFromColumnPredicate :: Predicate(ColumnComparison) -> Table -> Table
-getRowsFromColumnPredicate pred [] = []
-getRowsFromColumnPredicate pred (row:rows) | rowSatisfyColumnPredicate pred row = row : (getRowsFromColumnPredicate pred rows)
-                                           | otherwise                         = getRowsFromColumnPredicate pred rows
-
--- rowSatisfyColumnPredicate
-        -- @brief:
-        -- @params: 
-        -- @return:
-rowSatisfyColumnPredicate :: Predicate(ColumnComparison) -> Row -> Bool
-rowSatisfyColumnPredicate (Not predicate) row             = not (rowSatisfyColumnPredicate predicate row)
-rowSatisfyColumnPredicate (And predicate1 predicate2) row = and [(rowSatisfyColumnPredicate predicate1 row),  (rowSatisfyColumnPredicate predicate2 row)]
-rowSatisfyColumnPredicate (Or predicate1 predicate2) row  = or  [(rowSatisfyColumnPredicate predicate1 row),  (rowSatisfyColumnPredicate predicate2 row)]
-rowSatisfyColumnPredicate (Comparison columnComparison) row = rowSatisfyColumnComparison columnComparison row
-
--- rowSatisfyColumnComparison
-        -- @brief:
-        -- @params: 
-        -- @return:
-rowSatisfyColumnComparison :: ColumnComparison -> Row -> Bool
-rowSatisfyColumnComparison (ColVal col operator val) row   = satisfyOperator operator (row!!(col)) val
-rowSatisfyColumnComparison (ColCol col1 operator col2) row = satisfyOperator operator (row!!(col1)) (row!!(col2))
-
--- satisfyOperator
-        -- @brief:
-        -- @params: 
-        -- @return:
-satisfyOperator :: ComparisonOperator -> String -> String -> Bool
-satisfyOperator Eq val1 val2             = val1 == val2
-satisfyOperator LessThan val1 val2       = val1 < val2 
-satisfyOperator GreaterThan val1 val2    = val1 > val2
-satisfyOperator LessThanEq val1 val2     = val1 <= val2
-satisfyOperator GreaterThanEq val1 val2  = val1 >= val2
-satisfyOperator NotEq val1 val2          = val1 /= val2
-
-
-------------
--- UPDATE --
------------- 
+-- ============================== -- 
+-- =========== UPDATE =========== -- 
+-- ============================== -- 
 
 -- todo... 
 
@@ -442,9 +389,9 @@ getTableFromUpdateWhereAux assignments whereTable (row:rows) | contains row wher
         -- @return:
 getRowFromAssignments :: [Assignment] -> Row -> Row
 getRowFromAssignments [] row = row
-getRowFromAssignments ((Assignment col val):assignments) row = getRowFromAssignments assignments updatedRow
+getRowFromAssignments ((Assignment colNum val):assignments) row = getRowFromAssignments assignments updatedRow
         where
-                updatedRow = getRowFromAssignment col val row
+                updatedRow = getRowFromAssignment colNum val row
 
 -- getRowFromAssignment
         -- @brief:
@@ -455,17 +402,73 @@ getRowFromAssignment 0 val (cell:cells)      = val:cells
 getRowFromAssignment colNum val (cell:cells) = cell : (getRowFromAssignment (colNum - 1) val cells)
 
 
--------------------
--- SET FUNCTIONS --
--------------------
+-- ============================== -- 
+-- ============ WHERE =========== -- 
+-- ============================== -- 
 
+
+-- getTableFromWhere
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromWhere :: [Predicate(ColumnComparison)] -> Table ->  Table
+getTableFromWhere [] table           = table
+getTableFromWhere (pred:preds) table = getTableFromWhere preds (getRowsFromColumnPredicate pred table)
+
+-- getRowsFromColumnPredicate
+        -- @brief:
+        -- @params: 
+        -- @return:
+getRowsFromColumnPredicate :: Predicate(ColumnComparison) -> Table -> Table
+getRowsFromColumnPredicate pred [] = []
+getRowsFromColumnPredicate pred (row:rows) | rowSatisfyColumnPredicate pred row = row : (getRowsFromColumnPredicate pred rows)
+                                           | otherwise                         = getRowsFromColumnPredicate pred rows
+
+-- rowSatisfyColumnPredicate
+        -- @brief:
+        -- @params: 
+        -- @return:
+rowSatisfyColumnPredicate :: Predicate(ColumnComparison) -> Row -> Bool
+rowSatisfyColumnPredicate (Not predicate) row             = not (rowSatisfyColumnPredicate predicate row)
+rowSatisfyColumnPredicate (And predicate1 predicate2) row = and [(rowSatisfyColumnPredicate predicate1 row),  (rowSatisfyColumnPredicate predicate2 row)]
+rowSatisfyColumnPredicate (Or predicate1 predicate2) row  = or  [(rowSatisfyColumnPredicate predicate1 row),  (rowSatisfyColumnPredicate predicate2 row)]
+rowSatisfyColumnPredicate (Comparison columnComparison) row = rowSatisfyColumnComparison columnComparison row
+
+-- rowSatisfyColumnComparison
+        -- @brief:
+        -- @params: 
+        -- @return:
+rowSatisfyColumnComparison :: ColumnComparison -> Row -> Bool
+rowSatisfyColumnComparison (ColVal col operator val) row   = satisfyOperator operator (row!!(col)) val
+rowSatisfyColumnComparison (ColCol col1 operator col2) row = satisfyOperator operator (row!!(col1)) (row!!(col2))
+
+-- satisfyOperator
+        -- @brief:
+        -- @params: 
+        -- @return:
+satisfyOperator :: ComparisonOperator -> String -> String -> Bool
+satisfyOperator Eq val1 val2             = val1 == val2
+satisfyOperator LessThan val1 val2       = val1 < val2 
+satisfyOperator GreaterThan val1 val2    = val1 > val2
+satisfyOperator LessThanEq val1 val2     = val1 <= val2
+satisfyOperator GreaterThanEq val1 val2  = val1 >= val2
+satisfyOperator NotEq val1 val2          = val1 /= val2
+
+
+-- ============================== -- 
+-- ============ SETS ============ -- 
+-- ============================== -- 
+
+-----------------
+-- MAIN METHOD -- 
+-----------------
 
 -- getTableFromSet
         -- @brief:
         -- @params: 
         -- @return:
 getTableFromSet :: SetFunction -> Vars -> IO Table
-getTableFromSet (Union tableType1 tableType2) vars         = do
+getTableFromSet (Union tableType1 tableType2) vars        = do
                                                                 table1 <- getTableFromType tableType1 vars
                                                                 table2 <- getTableFromType tableType2 vars
                                                                 let unionTable = getTableFromUnion table1 table2
@@ -518,9 +521,20 @@ getTableFromIntersection (row1:rows1) table2 | contains row1 table2 = row1 : get
 getTableFromDifference :: Table -> Table -> Table
 getTableFromDifference table1 table2 = table1 \\ table2
 
-----------
--- JOIN -- 
-----------
+-- ============================== -- 
+-- ============ JOIN ============ -- 
+-- ============================== -- 
+
+-- Standard Join = Connects two tables together without a codition (row 1 of left table paired with row 1 of right table, and so on...)
+-- Inner Join    = Connects two tables together in the cases where the condition is matched.
+-- Left Join     = Connects two tables together in the cases where codition is met, and lists all rows of the left table even if they have no match (paired with nulls).
+-- Right Join    = Connects two tables together in the cases where codition is met, and lists all rows of the right table even if they have no match (paired with nulls).
+-- Outer Join    = Connects two rows together based on where the codition is met, and provides nulls for both sides when it is not.
+-- Full Join     = Every row in left table paired with every row in right table (every possible combination of rows). 
+
+-----------------
+-- MAIN METHOD -- 
+-----------------
 
 -- getTableFromJoin
         -- @brief:
@@ -558,6 +572,10 @@ getTableFromJoin (JoinFull ltableType rtableType) vars             = do
                                                                         let joinTable = getTableFromFullJoin ltable rtable
                                                                         return joinTable
 
+-------------------
+-- STANDARD JOIN -- 
+-------------------
+
 -- getTableFromStandard
         -- @brief:
         -- @params: 
@@ -572,6 +590,9 @@ getTableFromStandardJoin [] lwidth (rrow:rrows) rwidth = (nullLRow ++ rrow) : (g
                 nullLRow = getNullRow lwidth
 getTableFromStandardJoin (lrow:lrows) lwidth (rrow:rrows) rwidth = (lrow ++ rrow) : (getTableFromStandardJoin lrows lwidth rrows rwidth) 
 
+----------------
+-- INNER JOIN -- 
+----------------
 
 -- getTableFromInnerJoin
         -- @brief:
@@ -579,11 +600,15 @@ getTableFromStandardJoin (lrow:lrows) lwidth (rrow:rrows) rwidth = (lrow ++ rrow
         -- @return:
 getTableFromInnerJoin :: [Predicate(TableComparison)] ->Table -> Table -> Table
 getTableFromInnerJoin predicates [] rtable           = []
-getTableFromInnerJoin predicates (lrow:lrows) rtable | neededRows == [] = (getTableFromInnerJoin predicates lrows rtable) -- couldn't find a matching row for the right table
-                                                     | otherwise        = neededRows ++ (getTableFromInnerJoin predicates lrows rtable)
+getTableFromInnerJoin predicates (lrow:lrows) rtable | joinedRows == [] = (getTableFromInnerJoin predicates lrows rtable) -- couldn't find a matching row for the right table, so neither row is included
+                                                     | otherwise        = joinedRows ++ (getTableFromInnerJoin predicates lrows rtable)
         where
                 matchedRRows = (getRowsFromTablePredicates predicates lrow rtable) -- every row in rtable that has the same column value as ltable
-                neededRows   = getLJoinedRows lrow matchedRRows -- the row in ltable joined to every row it matches in rtable
+                joinedRows   = getLJoinedRows lrow matchedRRows -- the row in ltable joined to every row it matches in rtable
+
+---------------
+-- LEFT JOIN -- 
+---------------
 
 -- getTableFromLeftJoin
         -- @brief:
@@ -591,12 +616,17 @@ getTableFromInnerJoin predicates (lrow:lrows) rtable | neededRows == [] = (getTa
         -- @return:
 getTableFromLeftJoin :: [Predicate(TableComparison)] ->Table -> Table -> Table
 getTableFromLeftJoin predicates [] rtable                               = []
-getTableFromLeftJoin predicates (lrow:lrows) rtable | neededRows == []  = (lrow ++ nullRRow) : (getTableFromLeftJoin predicates lrows rtable) -- couldn't find a matching row for the right table, so using nulls
-                                                    | otherwise         = neededRows ++ (getTableFromLeftJoin predicates lrows rtable)
+getTableFromLeftJoin predicates (lrow:lrows) rtable | joinedRows == []  = (lrow ++ nullRRow) : (getTableFromLeftJoin predicates lrows rtable) -- couldn't find a matching row for the right table, so using nulls
+                                                    | otherwise         = joinedRows ++ (getTableFromLeftJoin predicates lrows rtable)
         where
                 matchedRRows = (getRowsFromTablePredicates predicates lrow rtable)
-                neededRows   = getLJoinedRows lrow matchedRRows 
+                joinedRows   = getLJoinedRows lrow matchedRRows 
                 nullRRow     = getNullRow (getTableWidth rtable) 
+
+-----------------
+-- RIGHT JOIN  -- 
+-----------------
+
 
 -- getTableFromRightJoin
         -- @brief:
@@ -604,12 +634,16 @@ getTableFromLeftJoin predicates (lrow:lrows) rtable | neededRows == []  = (lrow 
         -- @return:
 getTableFromRightJoin :: [Predicate(TableComparison)] ->Table -> Table -> Table
 getTableFromRightJoin predicates ltable []                              = []
-getTableFromRightJoin predicates ltable (rrow:rrows) | neededRows == [] = (nullLRow ++ rrow) : (getTableFromRightJoin predicates ltable rrows) -- couldn't find a matching row for the right table, so using nulls
-                                                     | otherwise        = neededRows ++ (getTableFromRightJoin predicates ltable rrows)
+getTableFromRightJoin predicates ltable (rrow:rrows) | joinedRows == [] = (nullLRow ++ rrow) : (getTableFromRightJoin predicates ltable rrows) -- couldn't find a matching row for the right table, so using nulls
+                                                     | otherwise        = joinedRows ++ (getTableFromRightJoin predicates ltable rrows)
         where
-                matchedLRows = (getRowsFromTablePredicatesR predicates rrow ltable)
-                neededRows   = getRJoinedRows matchedLRows rrow 
+                matchedLRows = (getRowsFromTablePredicatesR predicates rrow ltable) -- calling the method to get the rows based on Right-joining
+                joinedRows   = getRJoinedRows matchedLRows rrow 
                 nullLRow     = getNullRow (getTableWidth ltable) 
+
+-----------------
+-- OUTER JOIN  -- 
+-----------------
 
 -- getTableFromOuterJoin
         -- @brief:
@@ -621,6 +655,10 @@ getTableFromOuterJoin predicates ltable rtable = nub (leftJoinTable ++ rightJoin
                 leftJoinTable  = getTableFromLeftJoin predicates ltable rtable
                 rightJoinTable = getTableFromRightJoin predicates ltable rtable
 
+---------------
+-- FULL JOIN -- 
+---------------
+
 -- getTableFromFullJoin
         -- @brief:
         -- @params: 
@@ -631,6 +669,12 @@ getTableFromFullJoin (row:rows) table = joinedRows ++ (getTableFromFullJoin rows
         where
                 joinedRows = getLJoinedRows row table
         
+
+--------------------
+-- HELPER METHODS -- 
+--------------------
+
+
 -- getRowsFromTablePredicates
         -- @brief: Returns all rows within the table that satisfy the list of predicates betweenn the row and the table.
         -- @params: 
@@ -727,9 +771,15 @@ getRJoinedRows :: [Row] -> Row -> [Row]
 getRJoinedRows [] row = []
 getRJoinedRows (matchedRow:matches) row  = (matchedRow ++ row) : (getRJoinedRows matches row)
 
-------------
--- FORMAT -- 
-------------
+
+-- ============================== -- 
+-- =========== FORMAT =========== -- 
+-- ============================== -- 
+
+
+-----------------
+-- MAIN METHOD -- 
+-----------------
 
 -- getTableFromFormat
         -- @brief:
@@ -760,10 +810,14 @@ getTableFromFormat (Unique tableType) vars                    = do
                                                                 table <- getTableFromType tableType vars
                                                                 let uniqueTable = getTableFromUnique table
                                                                 return uniqueTable 
-getTableFromFormat (Transpose tableType) vars                    = do
+getTableFromFormat (Transpose tableType) vars                 = do
                                                                 table <- getTableFromType tableType vars
                                                                 let transposeTable = getTableFromTranspose table
                                                                 return transposeTable 
+
+-----------
+-- ORDER -- 
+-----------
 
 -- getTableFromOrder
         -- @brief:
@@ -805,6 +859,10 @@ getRowFromColValue col cell [] = []
 getRowFromColValue col cell (row:rows) | cell == (row!!col) = row
                                        | otherwise = getRowFromColValue col cell rows
 
+-----------
+-- LIMIT -- 
+-----------
+
 -- getTableFromLimit
         -- @brief:
         -- @params: 
@@ -813,12 +871,20 @@ getTableFromLimit :: Int -> Table -> Table
 getTableFromLimit 0 table = []
 getTableFromLimit limit (row:rows) = row : (getTableFromLimit (limit-1) rows)
 
--- getTableFromLimitOffset
+------------
+-- OFFSET -- 
+------------
+
+-- getTableFromOffset
         -- @brief:
         -- @params: 
         -- @return:
 getTableFromOffset :: Int -> Table -> Table
 getTableFromOffset offset table = drop offset table
+
+----------
+-- LAST -- 
+----------
 
 -- getTableFromLast
         -- @brief:
@@ -827,6 +893,10 @@ getTableFromOffset offset table = drop offset table
 getTableFromLast :: Int -> Table -> Table
 getTableFromLast lastNum table = drop ((length table) - (lastNum)) table
 
+------------
+-- UNIQUE -- 
+------------
+
 -- getTableFromUnique
         -- @brief:
         -- @params: 
@@ -834,6 +904,9 @@ getTableFromLast lastNum table = drop ((length table) - (lastNum)) table
 getTableFromUnique :: Table -> Table
 getTableFromUnique table = nub table
 
+---------------
+-- TRANSPOSE -- 
+---------------
 
 -- getTableFromTranspose
         -- @brief:
@@ -843,11 +916,14 @@ getTableFromTranspose :: Table -> Table
 getTableFromTranspose table = transpose table
 
 
--- ============================================ --
--- ============================================ --
--- ============== HELPER METHODS ============== --
--- ============================================ --
--- ============================================ --
+
+-- ================================================================================ --
+-- ================================================================================ --
+-- ================================ HELPER METHODS ================================ --
+-- ================================================================================ --
+-- ================================================================================ --
+
+
 
 
 -- formatTable
@@ -965,11 +1041,11 @@ contains val (x:xs) | x == val    = True
                     | otherwise     = contains val xs
 
 
--- ============================================ --
--- ============================================ --
--- ========== ERROR HANDLING METHODS ========== --
--- ============================================ --
--- ============================================ --
+-- ================================================================================ --
+-- ================================================================================ --
+-- =============================== ERRROR HANDLING  =============================== --
+-- ================================================================================ --
+-- ================================================================================ --
 
 
 
@@ -983,14 +1059,16 @@ noLex e = do
 
              
 
--- ============================================ --
--- ============================================ --
--- ============ PRINTING METHODS ============== --
--- ============================================ --
--- ============================================ --
+-- ================================================================================ --
+-- ================================================================================ --
+-- =============================== PRINTING TABLES ================================ --
+-- ================================================================================ --
+-- ================================================================================ --
 
 
-
+------------------
+-- NORMAL PRINT -- 
+------------------
 
 printTable :: Table -> IO ()
 printTable [] = return ()
@@ -1003,7 +1081,7 @@ printRow [] = return ()
 printRow (cell:cells) | cells == [] = do putStr cell
                                          printRow cells
                       | otherwise   = do putStr cell
-                                         putStr ", "
+                                         putStr ","
                                          printRow cells
 
 printLines :: [String] -> IO ()
@@ -1011,156 +1089,21 @@ printLines [] = return ()
 printLines (l:ls) = do putStrLn l
                        printLines ls
 
+------------------
+-- PRETTY PRINT -- 
+------------------
 
+prettyPrintTable :: Table -> IO ()
+prettyPrintTable [] = return ()
+prettyPrintTable (r:rs) = do putStr "\t"
+                             prettyPrintRow r
+                             putStrLn ""
+                             prettyPrintTable rs 
 
-
-
-
-
--- OLD JOIN STUFF
-
-
--- -- getTableFromJoin
---         -- @brief:
---         -- @params: 
---         -- @return:
--- getTableFromJoin :: JoinFunction -> Vars -> IO Table
--- getTableFromJoin (JoinStandard ltableType rtableType) vars                          = do 
---                                                                                         ltable <- getTableFromType ltableType vars
---                                                                                         rtable <- getTableFromType rtableType vars
---                                                                                         let joinTable = getTableFromStandardJoin ltable (getTableWidth ltable) rtable (getTableWidth rtable)
---                                                                                         return joinTable
--- getTableFromJoin (JoinInner (TableComparison lcol operator rcol) ltableType rtableType) vars = do 
---                                                                                         ltable <- getTableFromType ltableType vars
---                                                                                         rtable <- getTableFromType rtableType vars
---                                                                                         let joinTable = getTableFromInnerJoin lcol operator rcol ltable rtable
---                                                                                         return joinTable
--- getTableFromJoin (JoinLeft (TableComparison lcol operator rcol) ltableType rtableType) vars = do 
---                                                                                         ltable <- getTableFromType ltableType vars
---                                                                                         rtable <- getTableFromType rtableType vars
---                                                                                         let joinTable = getTableFromLeftJoin lcol operator rcol ltable rtable
---                                                                                         return joinTable
--- getTableFromJoin (JoinRight (TableComparison lcol operator rcol) ltableType rtableType) vars = do 
---                                                                                         ltable <- getTableFromType ltableType vars
---                                                                                         rtable <- getTableFromType rtableType vars
---                                                                                         let joinTable = getTableFromRightJoin lcol operator rcol ltable rtable
---                                                                                         return joinTable
--- getTableFromJoin (JoinOuter (TableComparison lcol operator rcol) ltableType rtableType) vars = do 
---                                                                                         ltable <- getTableFromType ltableType vars
---                                                                                         rtable <- getTableFromType rtableType vars
---                                                                                         let joinTable = getTableFromOuterJoin lcol operator rcol ltable rtable
---                                                                                         return joinTable
--- getTableFromJoin (JoinFull ltableType rtableType) vars                              = do 
---                                                                                         ltable <- getTableFromType ltableType vars
---                                                                                         rtable <- getTableFromType rtableType vars
---                                                                                         let joinTable = getTableFromFullJoin ltable rtable
---                                                                                         return joinTable
-
--- -- getTableFromStandard
---         -- @brief:
---         -- @params: 
---         -- @return:
--- getTableFromStandardJoin :: Table -> Int -> Table -> Int -> Table
--- getTableFromStandardJoin [] lwidth [] rwidth = []
--- getTableFromStandardJoin (lrow:lrows) lwidth [] rwidth = (lrow ++ nullRRow) : (getTableFromStandardJoin lrows lwidth [] rwidth)
---         where
---                 nullRRow = getNullRow rwidth
--- getTableFromStandardJoin [] lwidth (rrow:rrows) rwidth = (nullLRow ++ rrow) : (getTableFromStandardJoin [] lwidth rrows rwidth)
---         where
---                 nullLRow = getNullRow lwidth
--- getTableFromStandardJoin (lrow:lrows) lwidth (rrow:rrows) rwidth = (lrow ++ rrow) : (getTableFromStandardJoin lrows lwidth rrows rwidth) 
-
-
--- -- getTableFromInnerJoin
---         -- @brief:
---         -- @params: 
---         -- @return:
--- getTableFromInnerJoin :: Int -> ComparisonOperator -> Int -> Table -> Table -> Table
--- getTableFromInnerJoin lcol operator rcol [] rtable         = []
--- getTableFromInnerJoin lcol operator rcol (lrow:lrows) rtable | neededRows == [] = (getTableFromInnerJoin lcol operator rcol lrows rtable) -- couldn't find a matching row for the right table
---                                                     | otherwise = neededRows ++ (getTableFromInnerJoin lcol operator rcol lrows rtable)
---         where
---                 matchedRRows = (getMatchedRows operator rcol (lrow!!lcol) rtable) -- every row in rtable that has the same column value as ltable
---                 neededRows = getLJoinedRows lrow matchedRRows -- the row in ltable joined to every row it matches in rtable
-
--- -- getTableFromLeftJoin
---         -- @brief:
---         -- @params: 
---         -- @return:
--- getTableFromLeftJoin :: Int -> ComparisonOperator -> Int -> Table -> Table -> Table 
--- getTableFromLeftJoin lcol operator rcol [] rtable                               = []
--- getTableFromLeftJoin lcol operator rcol (lrow:lrows) rtable | neededRows == []  = (lrow ++ nullRRow) : (getTableFromLeftJoin lcol operator rcol lrows rtable) -- couldn't find a matching row for the right table, so using nulls
---                                                    | otherwise         = neededRows ++ (getTableFromLeftJoin lcol operator rcol lrows rtable)
---         where
---                 matchedRRows = (getMatchedRows operator rcol (lrow!!lcol) rtable)
---                 neededRows = getLJoinedRows lrow matchedRRows 
---                 nullRRow = getNullRow (getTableWidth rtable) 
-
--- -- getTableFromRightJoin
---         -- @brief:
---         -- @params: 
---         -- @return:
--- getTableFromRightJoin :: Int -> ComparisonOperator ->  Int -> Table -> Table -> Table 
--- getTableFromRightJoin lcol operator rcol ltable []                               = []
--- getTableFromRightJoin lcol operator rcol ltable (rrow:rrows) | neededRows == [] = (nullLRow ++ rrow) : (getTableFromRightJoin lcol operator rcol ltable rrows) -- couldn't find a matching row for the right table, so using nulls
---                                                     | otherwise         = neededRows ++ (getTableFromRightJoin lcol operator rcol ltable rrows)
---         where
---                 matchedLRows = (getMatchedRows operator lcol (rrow!!rcol) ltable)
---                 neededRows = getRJoinedRows matchedLRows rrow 
---                 nullLRow = getNullRow (getTableWidth ltable) 
-
--- -- getTableFromOuterJoin
---         -- @brief:
---         -- @params: 
---         -- @return:
--- getTableFromOuterJoin :: Int -> ComparisonOperator -> Int -> Table -> Table -> Table
--- getTableFromOuterJoin lcol operator rcol ltable rtable = nub (leftJoinTable ++ rightJoinTable)
---         where
---                 leftJoinTable = getTableFromLeftJoin lcol operator rcol ltable rtable
---                 rightJoinTable = getTableFromRightJoin lcol operator rcol ltable rtable
-
--- -- getTableFromFullJoin
---         -- @brief:
---         -- @params: 
---         -- @return:
--- getTableFromFullJoin :: Table -> Table -> Table
--- getTableFromFullJoin [] table         = []
--- getTableFromFullJoin (row:rows) table = joinedRows ++ (getTableFromFullJoin rows table)
---         where
---                 joinedRows = getLJoinedRows row table
-        
-
--- -- getMatchedRows
---         -- @brief:
---         -- @params: 
---         -- @return:
--- getMatchedRows :: ComparisonOperator -> Int -> Cell -> Table -> [Row]
--- getMatchedRows operator col cell [] = []
--- getMatchedRows Eq col cell (row:rows) | cell == (row!!col) = row : getMatchedRows Eq col cell rows
---                                       | otherwise = getMatchedRows Eq col cell rows
--- getMatchedRows LessThan col cell (row:rows) | cell < (row!!col) = row : getMatchedRows LessThan col cell rows
---                                             | otherwise = getMatchedRows LessThan col cell rows    
--- getMatchedRows GreaterThan col cell (row:rows) | cell > (row!!col) = row : getMatchedRows GreaterThan col cell rows
---                                               | otherwise = getMatchedRows GreaterThan col cell rows   
--- getMatchedRows LessThanEq col cell (row:rows)  | cell <= (row!!col) = row : getMatchedRows LessThanEq col cell rows
---                                                | otherwise = getMatchedRows LessThanEq col cell rows  
--- getMatchedRows GreaterThanEq col cell (row:rows) | cell >= (row!!col) = row : getMatchedRows GreaterThanEq col cell rows
---                                                 | otherwise = getMatchedRows GreaterThanEq col cell rows    
--- getMatchedRows NotEq col cell (row:rows) | cell /= (row!!col) = row : getMatchedRows NotEq col cell rows
---                                          | otherwise = getMatchedRows NotEq col cell rows
-
--- -- getLJoinedRows
---         -- @brief:
---         -- @params: 
---         -- @return:
--- getLJoinedRows :: Row -> [Row] -> [Row]
--- getLJoinedRows row [] = []
--- getLJoinedRows row (matchedRow:matches) = (row ++ matchedRow) : (getLJoinedRows row matches)
-
--- -- getRJoinedRows
---         -- @brief:
---         -- @params: 
---         -- @return:
--- getRJoinedRows :: [Row] -> Row -> [Row]
--- getRJoinedRows [] row = []
--- getRJoinedRows (matchedRow:matches) row  = (matchedRow ++ row) : (getRJoinedRows matches row)
+prettyPrintRow :: Row -> IO ()
+prettyPrintRow [] = return ()
+prettyPrintRow (cell:cells) | cells == [] = do putStr cell
+                                               prettyPrintRow cells
+                            | otherwise   = do putStr cell
+                                               putStr ", "
+                                               prettyPrintRow cells

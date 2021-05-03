@@ -64,8 +64,8 @@ $white+              ;
   ")"           { \p s -> TokenRParen p }
   [$digit]+     { \p s -> TokenInt p (read s)}
   \"[$alpha $white \_ \' $digit]* \. [$alpha $white \_ \' $digit]*\" { \p s -> TokenFilename p (read s) }
-  \"[$alpha $white \_ \' $digit]*\"    { \p s -> TokenStr p (read s) }
-  $alpha [$alpha \_ $digit]*           { \p s -> TokenVar p s }
+  \"[$alpha $white \_ \' $digit]*\"                                  { \p s -> TokenStr p (read s) }
+  $alpha [$alpha \_ $digit]*                                         { \p s -> TokenVar p s }
 
 { 
 -- Each action has type :: String -> Token 

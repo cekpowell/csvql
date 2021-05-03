@@ -7,69 +7,69 @@ import Tokens
 %tokentype { Token } 
 %error { parseError }
 %token 
-    Read     { TokenRead _ } 
-    Let      { TokenLet _ }
-    Return   { TokenReturn _ }
-    Select   { TokenSelect _ }
-    Insert   { TokenInsert _ }
-    Values   { TokenValues _ }
-    Column   { TokenColumn _ }
-    Delete   { TokenDelete _ }
-    Where    { TokenWhere _ }
-    Not      { TokenNot _ }
-    And      { TokenAnd _ }
-    Or       { TokenOr _ }
-    Update   { TokenUpdate _ }
-    Set      { TokenSet _ }
-    Union    { TokenUnion _ }
-    All      { TokenAll _ }
+    Read         { TokenRead _ } 
+    Let          { TokenLet _ }
+    Return       { TokenReturn _ }
+    Select       { TokenSelect _ }
+    Insert       { TokenInsert _ }
+    Values       { TokenValues _ }
+    Column       { TokenColumn _ }
+    Delete       { TokenDelete _ }
+    Where        { TokenWhere _ }
+    Not          { TokenNot _ }
+    And          { TokenAnd _ }
+    Or           { TokenOr _ }
+    Update       { TokenUpdate _ }
+    Set          { TokenSet _ }
+    Union        { TokenUnion _ }
+    All          { TokenAll _ }
     Intersection { TokenIntersection _ }
     Difference   { TokenDifference _ }
-    Join     { TokenJoin _ }
-    Inner    { TokenInner _ }
-    Left     { TokenLeft _ }
-    Right    { TokenRight _ }
-    Outer    { TokenOuter _ }
-    Full     { TokenFull _ }
-    On       { TokenOn _ }
-    Order    { TokenOrder _ }
-    By       { TokenBy _ }
-    Asc      { TokenAsc _ }
-    Desc     { TokenDesc _ }
-    Limit    { TokenLimit _ }
-    Offset   { TokenOffset _ }
-    Last     { TokenLast _ }
-    Unique   { TokenUnique _ }
-    Transpose { TokenTranspose _ }
-    '='      { TokenAssign _ }
-    "=="     { TokenEq _ }
-    "<"      { TokenLessThan _ }
-    ">"      { TokenGreaterThan _ }
-    "<="     { TokenLessThanEq _ }
-    ">="     { TokenGreaterThanEq _ }
-    "!="     { TokenNotEq _ }
-    ';'      { TokenSep _ }
-    '['      { TokenLSquare _ }
-    ']'      { TokenRSquare _ }
-    ','      { TokenComma _ }     
-    '.'      { TokenDot _ }
-    '*'      { TokenAst _ } 
-    "@"      { TokenAt _ } 
-    '('      { TokenLParen _ }
-    ')'      { TokenRParen _ }
-    int      { TokenInt  _ $$ }
-    Filename { TokenFilename _ $$ }
-    Str      { TokenStr _ $$ }
-    Var      { TokenVar _ $$ }
+    Join         { TokenJoin _ }
+    Inner        { TokenInner _ }
+    Left         { TokenLeft _ }
+    Right        { TokenRight _ }
+    Outer        { TokenOuter _ }
+    Full         { TokenFull _ }
+    On           { TokenOn _ }
+    Order        { TokenOrder _ }
+    By           { TokenBy _ }
+    Asc          { TokenAsc _ }
+    Desc         { TokenDesc _ }
+    Limit        { TokenLimit _ }
+    Offset       { TokenOffset _ }
+    Last         { TokenLast _ }
+    Unique       { TokenUnique _ }
+    Transpose    { TokenTranspose _ }
+    '='          { TokenAssign _ }
+    "=="         { TokenEq _ }
+    "<"          { TokenLessThan _ }
+    ">"          { TokenGreaterThan _ }
+    "<="         { TokenLessThanEq _ }
+    ">="         { TokenGreaterThanEq _ }
+    "!="         { TokenNotEq _ }
+    ';'          { TokenSep _ }
+    '['          { TokenLSquare _ }
+    ']'          { TokenRSquare _ }
+    ','          { TokenComma _ }     
+    '.'          { TokenDot _ }
+    '*'          { TokenAst _ } 
+    "@"          { TokenAt _ } 
+    '('          { TokenLParen _ }
+    ')'          { TokenRParen _ }
+    int          { TokenInt  _ $$ }
+    Filename     { TokenFilename _ $$ }
+    Str          { TokenStr _ $$ }
+    Var          { TokenVar _ $$ }
 
 
 %% 
-Exp : Let Var '=' TableType ';' Exp     { Let $2 $4 $6 }
-    | Return TableType ';'              { Return $2 }
+Exp : Let Var '=' TableType ';' Exp { Let $2 $4 $6 }
+    | Return TableType ';'          { Return $2 }
   
-TableType : Read Filename { Read $2 }
-          | Var { Var $1 }
-          | FunctionTable { Function $1 }
+TableType : Read Filename     { Read $2 }
+          | Var               { Var $1 }
+          | FunctionTable     { Function $1 }
           | '(' TableType ')' { $2 }
 
 FunctionTable : SelectFunction { Select $1 }
@@ -80,56 +80,56 @@ FunctionTable : SelectFunction { Select $1 }
               | JoinFunction   { Join $1 }
               | FormatFunction { Format $1 }
 
-SelectFunction : Select '*' TableType { SelectAll $3 }
-               | Select List(ColumnRef) TableType { SelectCol $2 $3 }
-               | Select '*' Where List(Predicate(ColumnComparison)) TableType { SelectAllWhere $4 $5 }
+SelectFunction : Select '*' TableType                                                     { SelectAll $3 }
+               | Select List(ColumnRef) TableType                                         { SelectCol $2 $3 }
+               | Select '*' Where List(Predicate(ColumnComparison)) TableType             { SelectAllWhere $4 $5 }
                | Select List(ColumnRef) Where List(Predicate(ColumnComparison)) TableType { SelectColWhere $2 $4 $5 }
 
 InsertFunction : Insert Values List(Str) TableType { InsertValues $3 $4 }
                | Insert Column ColumnRef TableType { InsertColumn $3 $4 }
 
-DeleteFunction : Delete TableType { DeleteAll $2}
-               | Delete List(ColumnRef) TableType { DeleteCol $2 $3 }
+DeleteFunction : Delete TableType                                         { DeleteAll $2}
+               | Delete List(ColumnRef) TableType                         { DeleteCol $2 $3 }
                | Delete Where List(Predicate(ColumnComparison)) TableType { DeleteAllWhere $3 $4 }
 
-UpdateFunction : Update List(Assignment) TableType { UpdateAll $2 $3 }
-               | Update List(Assignment) Where List(Predicate(ColumnComparison)) TableType {UpdateWhere $2 $4 $5 }
+UpdateFunction : Update List(Assignment) TableType                                         { UpdateAll $2 $3 }
+               | Update List(Assignment) Where List(Predicate(ColumnComparison)) TableType { UpdateWhere $2 $4 $5 }
 
-SetFunction : Union TableType TableType { Union $2 $3 }
+SetFunction : Union TableType TableType        { Union $2 $3 }
             | Intersection TableType TableType { Intersection $2 $3 }
-            | Difference TableType TableType { Difference $2 $3 }
+            | Difference TableType TableType   { Difference $2 $3 }
 
-JoinFunction : Join TableType TableType { JoinStandard $2 $3 }
+JoinFunction : Join TableType TableType                                           { JoinStandard $2 $3 }
              | Join Inner On List(Predicate(TableComparison)) TableType TableType { JoinInner $4 $5 $6 }
-             | Join Left On List(Predicate(TableComparison)) TableType TableType { JoinLeft $4 $5 $6 }
+             | Join Left On List(Predicate(TableComparison))  TableType TableType { JoinLeft $4 $5 $6 }
              | Join Right On List(Predicate(TableComparison)) TableType TableType { JoinRight $4 $5 $6 }
              | Join Outer On List(Predicate(TableComparison)) TableType TableType { JoinOuter $4 $5 $6 }
-             | Join Full TableType TableType {JoinFull $3 $4 }
+             | Join Full TableType TableType                                      { JoinFull $3 $4 }
                
-FormatFunction: Order By Direction TableType { OrderBy $3 $4 }
+FormatFunction: Order By Direction TableType                 { OrderBy $3 $4 }
               | Order By List(ColumnRef) Direction TableType { OrderByCol $3 $4 $5 }
-              | Limit int TableType { Limit $2 $3 }
-              | Offset int TableType { Offset $2 $3 }
-              | Last int TableType { Last $2 $3 }
-              | Unique TableType { Unique $2 }
-              | Transpose TableType { Transpose $2 }
+              | Limit int TableType                          { Limit $2 $3 }
+              | Offset int TableType                         { Offset $2 $3 }
+              | Last int TableType                           { Last $2 $3 }
+              | Unique TableType                             { Unique $2 }
+              | Transpose TableType                          { Transpose $2 }
 
-List (a)     : '[' ']'       { [] }
-             | '[' ListCont (a) ']'  { $2 }
-ListCont (a) : a           { [$1] }
-             | a ',' ListCont (a)  { [$1] ++ $3}
+List (a)     : '[' ']'              { [] }
+             | '[' ListCont (a) ']' { $2 }
+ListCont (a) : a                    { [$1] }
+             | a ',' ListCont (a)   { [$1] ++ $3 }
 
-Predicate (a) : Not Predicate (a)  { Not $2 }
+Predicate (a) : Not Predicate (a)               { Not $2 }
               | Predicate (a) And Predicate (a) { And $1 $3 }
-              | Predicate (a) Or Predicate (a) { Or $1 $3  }
-              | a     { Comparison $1 }
+              | Predicate (a) Or Predicate (a)  { Or $1 $3  }
+              | a                               { Comparison $1 }
 
 TableComparison : Left '.' ColumnRef ComparisonOperator Right '.' ColumnRef { TableComparison $3 $4 $7 }
 
 TableColumnRef : Var '.' ColumnRef { TableColumnRef $1 $3 }
 
-ColumnComparison : ColumnRef ComparisonOperator Str      { ColVal $1 $2 $3 }
-                 | ColumnRef ComparisonOperator ColumnRef  { ColCol $1 $2 $3 }
+ColumnComparison : ColumnRef ComparisonOperator Str       { ColVal $1 $2 $3 }
+                 | ColumnRef ComparisonOperator ColumnRef { ColCol $1 $2 $3 }
 
 ColumnRef : "@" int { $2 }
 
@@ -142,7 +142,7 @@ ComparisonOperator : "==" { Eq }
 
 Assignment : ColumnRef '=' Str { Assignment $1 $3 }
 
-Direction : Asc { Asc }
+Direction : Asc  { Asc }
           | Desc { Desc }
 
 { 
@@ -204,6 +204,15 @@ data JoinFunction = JoinStandard TableType TableType
                   | JoinFull TableType TableType
                     deriving (Show, Eq)
 
+data FormatFunction = OrderBy Direction TableType
+                    | OrderByCol [Int] Direction TableType
+                    | Limit Int TableType
+                    | Offset Int TableType
+                    | Last Int TableType
+                    | Unique TableType
+                    | Transpose TableType
+                      deriving (Show, Eq)
+
 data Predicate a = Not (Predicate a)
                  | And (Predicate a) (Predicate a)
                  | Or (Predicate a) (Predicate a)
@@ -230,14 +239,5 @@ data ComparisonOperator = Eq
 
 data Assignment = Assignment Int String
                   deriving (Show, Eq)
-
-data FormatFunction = OrderBy Direction TableType
-                    | OrderByCol [Int] Direction TableType
-                    | Limit Int TableType
-                    | Offset Int TableType
-                    | Last Int TableType
-                    | Unique TableType
-                    | Transpose TableType
-                      deriving (Show, Eq)
 
 }

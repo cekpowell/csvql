@@ -2485,6 +2485,15 @@ data JoinFunction = JoinStandard TableType TableType
                   | JoinFull TableType TableType
                     deriving (Show, Eq)
 
+data FormatFunction = OrderBy Direction TableType
+                    | OrderByCol [Int] Direction TableType
+                    | Limit Int TableType
+                    | Offset Int TableType
+                    | Last Int TableType
+                    | Unique TableType
+                    | Transpose TableType
+                      deriving (Show, Eq)
+
 data Predicate a = Not (Predicate a)
                  | And (Predicate a) (Predicate a)
                  | Or (Predicate a) (Predicate a)
@@ -2511,15 +2520,6 @@ data ComparisonOperator = Eq
 
 data Assignment = Assignment Int String
                   deriving (Show, Eq)
-
-data FormatFunction = OrderBy Direction TableType
-                    | OrderByCol [Int] Direction TableType
-                    | Limit Int TableType
-                    | Offset Int TableType
-                    | Last Int TableType
-                    | Unique TableType
-                    | Transpose TableType
-                      deriving (Show, Eq)
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 -- $Id: GenericTemplate.hs,v 1.26 2005/01/14 14:47:22 simonmar Exp $
 
