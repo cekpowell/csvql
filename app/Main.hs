@@ -185,7 +185,7 @@ getTableFromFunction (Select selectFunction) vars = getTableFromSelect selectFun
 getTableFromFunction (Insert insertFunction) vars = getTableFromInsert insertFunction vars
 getTableFromFunction (Delete deleteFunction) vars = getTableFromDelete deleteFunction vars
 getTableFromFunction (Format formatFunction) vars = getTableFromFormat formatFunction vars
-getTableFromFunction (Union unionFunction) vars   = getTableFromUnion unionFunction vars 
+getTableFromFunction (Set setFunction) vars       = getTableFromSet setFunction vars 
 getTableFromFunction (Join joinFunction) vars     = getTableFromJoin joinFunction vars
 
 
@@ -387,6 +387,29 @@ satisfyOperator GreaterThanEq val1 val2  = val1 >= val2
 satisfyOperator NotEq val1 val2          = val1 /= val2
 
 
+-------------------
+-- SET FUNCTIONS --
+-------------------
+
+
+
+getTableFromSet :: SetFunction -> Vars -> IO Table
+getTableFromSet (Union tableType1 tableType2) vars         = do
+                                                                table1 <- getTableFromType tableType1 vars
+                                                                table2 <- getTableFromType tableType2 vars
+                                                                let unionTable = getTableFromUnion table1 table2
+                                                                return unionTable
+getTableFromSet (Intersection tableType1 tableType2) vars = do
+                                                                table1 <- getTableFromType tableType1 vars
+                                                                table2 <- getTableFromType tableType2 vars
+                                                                let intersectionTable = getTableFromIntersection table1 table2
+                                                                return intersectionTable
+getTableFromSet (Difference tableType1 tableType2) vars   = do
+                                                                table1 <- getTableFromType tableType1 vars
+                                                                table2 <- getTableFromType tableType2 vars
+                                                                let differenceTable = getTableFromDifference table1 table2
+                                                                return differenceTable
+
 -----------
 -- UNION -- 
 -----------
@@ -395,18 +418,34 @@ satisfyOperator NotEq val1 val2          = val1 /= val2
         -- @brief:
         -- @params: 
         -- @return:
-getTableFromUnion :: UnionFunction -> Vars -> IO Table
-getTableFromUnion (UnionUnique tableType1 tableType2) vars    = do
-                                                                table1 <- getTableFromType tableType1 vars
-                                                                table2 <- getTableFromType tableType2 vars
-                                                                let unionTable = nub (table1 ++ table2)
-                                                                return unionTable
-getTableFromUnion (UnionAll tableType1 tableType2) vars = do
-                                                                table1 <- getTableFromType tableType1 vars
-                                                                table2 <- getTableFromType tableType2 vars
-                                                                let unionTable = table1 ++ table2
-                                                                return unionTable
+getTableFromUnion :: Table -> Table -> Table
+getTableFromUnion table1 table2 = table1 ++ table2
 
+
+------------------
+-- INTERSECTION --
+------------------
+
+-- getTableFromIntersection
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromIntersection :: Table -> Table -> Table
+getTableFromIntersection [] table2 = []
+getTableFromIntersection (row1:rows1) table2 | contains row1 table2 = row1 : getTableFromIntersection rows1 table2
+                                             | otherwise            = getTableFromIntersection rows1 table2
+
+
+----------------
+-- DIFFERENCE -- 
+----------------
+
+-- getTableFromDifference
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromDifference :: Table -> Table -> Table
+getTableFromDifference table1 table2 = table1 \\ table2
 
 ----------
 -- JOIN -- 
@@ -539,26 +578,30 @@ getTableFromFullJoin (row:rows) table = joinedRows ++ (getTableFromFullJoin rows
         -- @params: 
         -- @return:
 getTableFromFormat :: FormatFunction -> Vars -> IO Table
-getTableFromFormat (OrderBy direction tableType) vars =  do 
+getTableFromFormat (OrderBy direction tableType) vars         =  do 
                                                                 table <- getTableFromType tableType vars
                                                                 let orderTable = getTableFromOrder direction table 
                                                                 return orderTable
-getTableFromFormat (OrderByCol cols direction tableType) vars =  do 
-                                                                        table <- getTableFromType tableType vars
-                                                                        let orderTable = getTableFromOrderCol cols direction table
-                                                                        return orderTable
-getTableFromFormat (Limit limit tableType) vars   = do
-                                                        table <- getTableFromType tableType vars
-                                                        let limitTable = getTableFromLimit limit table
-                                                        return limitTable
-getTableFromFormat (Offset offset tableType) vars = do
-                                                        table <- getTableFromType tableType vars
-                                                        let offsetTable = getTableFromOffset offset table
-                                                        return offsetTable
-getTableFromFormat (Last num tableType) vars = do
-                                                table <- getTableFromType tableType vars
-                                                let lastTable = getTableFromLast num table
-                                                return lastTable
+getTableFromFormat (OrderByCol cols direction tableType) vars = do 
+                                                                table <- getTableFromType tableType vars
+                                                                let orderTable = getTableFromOrderCol cols direction table
+                                                                return orderTable
+getTableFromFormat (Limit limit tableType) vars               = do
+                                                                table <- getTableFromType tableType vars
+                                                                let limitTable = getTableFromLimit limit table
+                                                                return limitTable
+getTableFromFormat (Offset offset tableType) vars             = do
+                                                                table <- getTableFromType tableType vars
+                                                                let offsetTable = getTableFromOffset offset table
+                                                                return offsetTable
+getTableFromFormat (Last num tableType) vars                  = do
+                                                                table <- getTableFromType tableType vars
+                                                                let lastTable = getTableFromLast num table
+                                                                return lastTable
+getTableFromFormat (Unique tableType) vars                    = do
+                                                                table <- getTableFromType tableType vars
+                                                                let uniqueTable = getUniqueTable table
+                                                                return uniqueTable 
 
 -- getTableFromOrder
         -- @brief:
@@ -631,6 +674,13 @@ getTableFromOffset offset table = drop offset table
 getTableFromLast :: Int -> Table -> Table
 getTableFromLast lastNum table = drop ((length table) - (lastNum)) table
 
+-- getUniqueTable
+        -- @brief:
+        -- @params: 
+        -- @return:
+getUniqueTable :: Table -> Table
+getUniqueTable table = nub table
+
 
 
 
@@ -672,9 +722,6 @@ trimRow (cell:cells) = trimCell cell : trimRow cells
 trimCell :: String -> String
 trimCell = f . f
    where f = reverse . dropWhile isSpace
-
-
-
 
 -- updateVars
         -- @brief:
@@ -749,7 +796,14 @@ interleaveAll xs ys = (interleave xs ys) ++ extraElements
                               | length xs > length ys = drop (length ys) xs
                               | length xs < length ys = drop (length xs) ys
 
-
+-- contains
+        -- @brief:
+        -- @params: 
+        -- @return:
+contains :: Eq a => a -> [a] -> Bool
+contains val [] = False
+contains val (x:xs) | x == val    = True
+                    | otherwise     = contains val xs
 
 
 -- ============================================ --

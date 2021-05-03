@@ -9,8 +9,8 @@ $alpha = [a-zA-Z]
 -- alphabetic characters
 
 tokens :-
-$white+    ; 
-  "--".*     ; 
+$white+              ; 
+  "--".*             ; 
   "--/" [.\n]* "/--" ;
   READ          { \p s -> TokenRead p } 
   LET           { \p s -> TokenLet p }
@@ -26,6 +26,8 @@ $white+    ;
   OR            { \p s -> TokenOr p }
   UNION         { \p s -> TokenUnion p }
   ALL           { \p s -> TokenAll p }
+  INTERSECTION  { \p s -> TokenIntersection p }
+  DIFFERENCE    { \p s -> TokenDifference p }
   JOIN          { \p s -> TokenJoin p }
   INNER         { \p s -> TokenInner p }
   LEFT          { \p s -> TokenLeft p }
@@ -40,6 +42,7 @@ $white+    ;
   LIMIT         { \p s -> TokenLimit p }
   OFFSET        { \p s -> TokenOffset p }
   LAST          { \p s -> TokenLast p }
+  UNIQUE        { \p s -> TokenUnique p }
   "="           { \p s -> TokenAssign p }
   "=="          { \p s -> TokenEq p }
   "<"           { \p s -> TokenLessThan p }
@@ -83,6 +86,8 @@ data Token = TokenRead AlexPosn
 
               | TokenUnion AlexPosn
               | TokenAll AlexPosn
+              | TokenIntersection AlexPosn
+              | TokenDifference AlexPosn
 
               | TokenJoin AlexPosn
               | TokenInner AlexPosn
@@ -99,6 +104,8 @@ data Token = TokenRead AlexPosn
               | TokenLimit AlexPosn
               | TokenOffset AlexPosn
               | TokenLast AlexPosn
+              | TokenUnique AlexPosn
+
               | TokenAssign AlexPosn
 
               | TokenEq AlexPosn
@@ -145,6 +152,8 @@ tokenPosn (TokenOr (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 
 tokenPosn (TokenUnion (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAll (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenIntersection (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenDifference (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 
 tokenPosn (TokenJoin (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenInner (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
@@ -161,6 +170,7 @@ tokenPosn (TokenDesc (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLimit (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenOffset (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLast (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenUnique (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 
 tokenPosn (TokenAssign (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 

@@ -1,8 +1,11 @@
-RETURN READ "A.csv";
+LET var1 = READ "A.csv";
+LET var2 = READ "B.csv";
+
+RETURN INTERSECTION var1 var2;
 
 --/
 
-this is a multiline comment 
+this is a multiline comment.
 
 /--
 
@@ -35,6 +38,7 @@ this is a multiline comment
 -- PROBLEM 3 --
 --------------- 
 
+
 -- LET table1 = READ "P.csv";
 -- LET table2 = READ "Q.csv";
 
@@ -58,9 +62,11 @@ this is a multiline comment
 
 -- RETURN ORDER BY ASC neededColumns;
 
+
 ---------------
 -- PROBLEM 4 -- 
 ---------------
+
 
 -- LET table = READ "A.csv";
 
@@ -68,9 +74,11 @@ this is a multiline comment
 
 -- RETURN ORDER BY ASC selectedRows;
 
+
 ---------------
 -- PROBLEM 5 -- 
 ---------------
+
 
 -- LET table = READ "A.csv";
 

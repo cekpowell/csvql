@@ -21,6 +21,8 @@ import Tokens
     Or       { TokenOr _ }
     Union    { TokenUnion _ }
     All      { TokenAll _ }
+    Intersection { TokenIntersection _ }
+    Difference   { TokenDifference _ }
     Join     { TokenJoin _ }
     Inner    { TokenInner _ }
     Left     { TokenLeft _ }
@@ -35,6 +37,7 @@ import Tokens
     Limit    { TokenLimit _ }
     Offset   { TokenOffset _ }
     Last     { TokenLast _ }
+    Unique   { TokenUnique _ }
     '='      { TokenAssign _ }
     "=="     { TokenEq _ }
     "<"      { TokenLessThan _ }
@@ -69,7 +72,7 @@ TableType : Read Filename { Read $2 }
 FunctionTable : SelectFunction { Select $1 }
               | InsertFunction { Insert $1 }
               | DeleteFunction { Delete $1 }
-              | UnionFunction  { Union $1 }
+              | SetFunction    { Set $1 }
               | JoinFunction   { Join $1 }
               | FormatFunction { Format $1 }
 
@@ -85,8 +88,9 @@ DeleteFunction : Delete TableType { DeleteAll $2}
 InsertFunction : Insert Values List(Str) TableType { InsertValues $3 $4 }
                | Insert Column ColumnRef Str TableType { InsertColumn $3 $4 $5}
 
-UnionFunction : Union TableType TableType { UnionUnique $2 $3 }
-              | Union All TableType TableType { UnionAll $3 $4 }
+SetFunction : Union TableType TableType { Union $2 $3 }
+            | Intersection TableType TableType { Intersection $2 $3 }
+            | Difference TableType TableType { Difference $2 $3 }
 
 JoinFunction : Join TableType TableType { JoinStandard $2 $3 }
              | Join Inner On TableComparison TableType TableType { JoinInner $4 $5 $6 }
@@ -104,6 +108,7 @@ FormatFunction: Order By Direction TableType { OrderBy $3 $4 }
               | Limit int TableType { Limit $2 $3 }
               | Offset int TableType { Offset $2 $3 }
               | Last int TableType { Last $2 $3 }
+              | Unique TableType { Unique $2 }
 
 Direction : Asc { Asc }
           | Desc { Desc }
@@ -152,7 +157,7 @@ data Direction = Asc
 data FunctionTable = Select SelectFunction
                    | Insert InsertFunction
                    | Delete DeleteFunction
-                   | Union UnionFunction
+                   | Set SetFunction
                    | Join JoinFunction
                    | Format FormatFunction
                      deriving (Show, Eq)
@@ -172,9 +177,10 @@ data InsertFunction = InsertValues [String] TableType
                     | InsertColumn Int String TableType
                       deriving (Show, Eq)
 
-data UnionFunction = UnionUnique TableType TableType
-                   | UnionAll TableType TableType 
-                     deriving (Show, Eq)
+data SetFunction = Union TableType TableType
+                 | Intersection TableType TableType
+                 | Difference TableType TableType
+                   deriving (Show, Eq)
 
 data JoinFunction = JoinStandard TableType TableType
                   | JoinInner TableComparison TableType TableType 
@@ -195,6 +201,7 @@ data FormatFunction = OrderBy Direction TableType
                     | Limit Int TableType
                     | Offset Int TableType
                     | Last Int TableType
+                    | Unique TableType
                       deriving (Show, Eq)
 
 data Predicate = Not Predicate 
