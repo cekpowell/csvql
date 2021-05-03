@@ -114,7 +114,7 @@ FormatFunction: Order By Direction TableType { OrderBy $3 $4 }
               | Unique TableType { Unique $2 }
               | Transpose TableType { Transpose $2 }
 
-TableComparison : Left '.' ColumnRef "==" Right '.' ColumnRef { TableComparison $3 $7 }
+TableComparison : Left '.' ColumnRef ComparisonOperator Right '.' ColumnRef { TableComparison $3 $4 $7 }
 
 TableColumnRef : Var '.' ColumnRef { TableColumnRef $1 $3 }
 
@@ -204,7 +204,7 @@ data JoinFunction = JoinStandard TableType TableType
                   | JoinFull TableType TableType
                     deriving (Show, Eq)
 
-data TableComparison = TableComparison Int Int
+data TableComparison = TableComparison Int ComparisonOperator Int
                        deriving (Show, Eq)
 
 data TableColumnRef = TableColumnRef String Int

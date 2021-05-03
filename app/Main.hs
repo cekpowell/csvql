@@ -12,7 +12,7 @@ import Control.Exception
 import System.IO
 import Data.List
 import Data.List.Split
-import Data.Char (isSpace)
+import Data.Char (isSpace) 
 
 -- ADDITIONAL DEPENDENCIES 
         -- Data.List.Split
@@ -532,25 +532,25 @@ getTableFromJoin (JoinStandard ltableType rtableType) vars                      
                                                                                         rtable <- getTableFromType rtableType vars
                                                                                         let joinTable = getTableFromStandardJoin ltable (getTableWidth ltable) rtable (getTableWidth rtable)
                                                                                         return joinTable
-getTableFromJoin (JoinInner (TableComparison lcol rcol) ltableType rtableType) vars = do 
+getTableFromJoin (JoinInner (TableComparison lcol operator rcol) ltableType rtableType) vars = do 
                                                                                         ltable <- getTableFromType ltableType vars
                                                                                         rtable <- getTableFromType rtableType vars
-                                                                                        let joinTable = getTableFromInnerJoin lcol rcol ltable rtable
+                                                                                        let joinTable = getTableFromInnerJoin lcol operator rcol ltable rtable
                                                                                         return joinTable
-getTableFromJoin (JoinLeft (TableComparison lcol rcol) ltableType rtableType) vars = do 
+getTableFromJoin (JoinLeft (TableComparison lcol operator rcol) ltableType rtableType) vars = do 
                                                                                         ltable <- getTableFromType ltableType vars
                                                                                         rtable <- getTableFromType rtableType vars
-                                                                                        let joinTable = getTableFromLeftJoin lcol rcol ltable rtable
+                                                                                        let joinTable = getTableFromLeftJoin lcol operator rcol ltable rtable
                                                                                         return joinTable
-getTableFromJoin (JoinRight (TableComparison lcol rcol) ltableType rtableType) vars = do 
+getTableFromJoin (JoinRight (TableComparison lcol operator rcol) ltableType rtableType) vars = do 
                                                                                         ltable <- getTableFromType ltableType vars
                                                                                         rtable <- getTableFromType rtableType vars
-                                                                                        let joinTable = getTableFromRightJoin lcol rcol ltable rtable
+                                                                                        let joinTable = getTableFromRightJoin lcol operator rcol ltable rtable
                                                                                         return joinTable
-getTableFromJoin (JoinOuter (TableComparison lcol rcol) ltableType rtableType) vars = do 
+getTableFromJoin (JoinOuter (TableComparison lcol operator rcol) ltableType rtableType) vars = do 
                                                                                         ltable <- getTableFromType ltableType vars
                                                                                         rtable <- getTableFromType rtableType vars
-                                                                                        let joinTable = getTableFromOuterJoin lcol rcol ltable rtable
+                                                                                        let joinTable = getTableFromOuterJoin lcol operator rcol ltable rtable
                                                                                         return joinTable
 getTableFromJoin (JoinFull ltableType rtableType) vars                              = do 
                                                                                         ltable <- getTableFromType ltableType vars
@@ -577,32 +577,24 @@ getTableFromStandardJoin (lrow:lrows) lwidth (rrow:rrows) rwidth = (lrow ++ rrow
         -- @brief:
         -- @params: 
         -- @return:
-getTableFromInnerJoin :: Int -> Int -> Table -> Table -> Table
-getTableFromInnerJoin lcol rcol [] rtable         = []
-getTableFromInnerJoin lcol rcol (lrow:lrows) rtable | neededRows == [] = (getTableFromInnerJoin lcol rcol lrows rtable) -- couldn't find a matching row for the right table
-                                                    | otherwise = neededRows ++ (getTableFromInnerJoin lcol rcol lrows rtable)
+getTableFromInnerJoin :: Int -> ComparisonOperator -> Int -> Table -> Table -> Table
+getTableFromInnerJoin lcol operator rcol [] rtable         = []
+getTableFromInnerJoin lcol operator rcol (lrow:lrows) rtable | neededRows == [] = (getTableFromInnerJoin lcol operator rcol lrows rtable) -- couldn't find a matching row for the right table
+                                                    | otherwise = neededRows ++ (getTableFromInnerJoin lcol operator rcol lrows rtable)
         where
-                matchedRRows = (getRowsFromColValue rcol (lrow!!lcol) rtable) -- every row in rtable that has the same column value as ltable
+                matchedRRows = (getMatchedRows operator rcol (lrow!!lcol) rtable) -- every row in rtable that has the same column value as ltable
                 neededRows = getLJoinedRows lrow matchedRRows -- the row in ltable joined to every row it matches in rtable
-
-getLJoinedRows :: Row -> [Row] -> [Row]
-getLJoinedRows row [] = []
-getLJoinedRows row (matchedRow:matches) = (row ++ matchedRow) : (getLJoinedRows row matches)
-
-getRJoinedRows :: [Row] -> Row -> [Row]
-getRJoinedRows [] row = []
-getRJoinedRows (matchedRow:matches) row  = (matchedRow ++ row) : (getRJoinedRows matches row)
 
 -- getTableFromLeftJoin
         -- @brief:
         -- @params: 
         -- @return:
-getTableFromLeftJoin :: Int -> Int -> Table -> Table -> Table 
-getTableFromLeftJoin lcol rcol [] rtable                               = []
-getTableFromLeftJoin lcol rcol (lrow:lrows) rtable | neededRows == []  = (lrow ++ nullRRow) : (getTableFromLeftJoin lcol rcol lrows rtable) -- couldn't find a matching row for the right table, so using nulls
-                                                   | otherwise         = neededRows ++ (getTableFromLeftJoin lcol rcol lrows rtable)
+getTableFromLeftJoin :: Int -> ComparisonOperator -> Int -> Table -> Table -> Table 
+getTableFromLeftJoin lcol operator rcol [] rtable                               = []
+getTableFromLeftJoin lcol operator rcol (lrow:lrows) rtable | neededRows == []  = (lrow ++ nullRRow) : (getTableFromLeftJoin lcol operator rcol lrows rtable) -- couldn't find a matching row for the right table, so using nulls
+                                                   | otherwise         = neededRows ++ (getTableFromLeftJoin lcol operator rcol lrows rtable)
         where
-                matchedRRows = (getRowsFromColValue rcol (lrow!!lcol) rtable)
+                matchedRRows = (getMatchedRows operator rcol (lrow!!lcol) rtable)
                 neededRows = getLJoinedRows lrow matchedRRows 
                 nullRRow = getNullRow (getTableWidth rtable) 
 
@@ -610,12 +602,12 @@ getTableFromLeftJoin lcol rcol (lrow:lrows) rtable | neededRows == []  = (lrow +
         -- @brief:
         -- @params: 
         -- @return:
-getTableFromRightJoin :: Int -> Int -> Table -> Table -> Table 
-getTableFromRightJoin lcol rcol ltable []                               = []
-getTableFromRightJoin lcol rcol ltable (rrow:rrows) | neededRows == [] = (nullLRow ++ rrow) : (getTableFromRightJoin lcol rcol ltable rrows) -- couldn't find a matching row for the right table, so using nulls
-                                                    | otherwise         = neededRows ++ (getTableFromRightJoin lcol rcol ltable rrows)
+getTableFromRightJoin :: Int -> ComparisonOperator ->  Int -> Table -> Table -> Table 
+getTableFromRightJoin lcol operator rcol ltable []                               = []
+getTableFromRightJoin lcol operator rcol ltable (rrow:rrows) | neededRows == [] = (nullLRow ++ rrow) : (getTableFromRightJoin lcol operator rcol ltable rrows) -- couldn't find a matching row for the right table, so using nulls
+                                                    | otherwise         = neededRows ++ (getTableFromRightJoin lcol operator rcol ltable rrows)
         where
-                matchedLRows = (getRowsFromColValue lcol (rrow!!rcol) ltable)
+                matchedLRows = (getMatchedRows operator lcol (rrow!!rcol) ltable)
                 neededRows = getRJoinedRows matchedLRows rrow 
                 nullLRow = getNullRow (getTableWidth ltable) 
 
@@ -623,11 +615,11 @@ getTableFromRightJoin lcol rcol ltable (rrow:rrows) | neededRows == [] = (nullLR
         -- @brief:
         -- @params: 
         -- @return:
-getTableFromOuterJoin :: Int -> Int -> Table -> Table -> Table
-getTableFromOuterJoin lcol rcol ltable rtable = nub (leftJoinTable ++ rightJoinTable)
+getTableFromOuterJoin :: Int -> ComparisonOperator -> Int -> Table -> Table -> Table
+getTableFromOuterJoin lcol operator rcol ltable rtable = nub (leftJoinTable ++ rightJoinTable)
         where
-                leftJoinTable = getTableFromLeftJoin lcol rcol ltable rtable
-                rightJoinTable = getTableFromRightJoin lcol rcol ltable rtable
+                leftJoinTable = getTableFromLeftJoin lcol operator rcol ltable rtable
+                rightJoinTable = getTableFromRightJoin lcol operator rcol ltable rtable
 
 -- getTableFromFullJoin
         -- @brief:
@@ -639,6 +631,41 @@ getTableFromFullJoin (row:rows) table = joinedRows ++ (getTableFromFullJoin rows
         where
                 joinedRows = getLJoinedRows row table
         
+
+-- getMatchedRows
+        -- @brief:
+        -- @params: 
+        -- @return:
+getMatchedRows :: ComparisonOperator -> Int -> Cell -> Table -> [Row]
+getMatchedRows operator col cell [] = []
+getMatchedRows Eq col cell (row:rows) | cell == (row!!col) = row : getMatchedRows Eq col cell rows
+                                      | otherwise = getMatchedRows Eq col cell rows
+getMatchedRows LessThan col cell (row:rows) | cell < (row!!col) = row : getMatchedRows LessThan col cell rows
+                                            | otherwise = getMatchedRows LessThan col cell rows    
+getMatchedRows GreaterThan col cell (row:rows) | cell > (row!!col) = row : getMatchedRows GreaterThan col cell rows
+                                              | otherwise = getMatchedRows GreaterThan col cell rows   
+getMatchedRows LessThanEq col cell (row:rows)  | cell <= (row!!col) = row : getMatchedRows LessThanEq col cell rows
+                                               | otherwise = getMatchedRows LessThanEq col cell rows  
+getMatchedRows GreaterThanEq col cell (row:rows) | cell >= (row!!col) = row : getMatchedRows GreaterThanEq col cell rows
+                                                | otherwise = getMatchedRows GreaterThanEq col cell rows    
+getMatchedRows NotEq col cell (row:rows) | cell /= (row!!col) = row : getMatchedRows NotEq col cell rows
+                                         | otherwise = getMatchedRows NotEq col cell rows
+
+-- getLJoinedRows
+        -- @brief:
+        -- @params: 
+        -- @return:
+getLJoinedRows :: Row -> [Row] -> [Row]
+getLJoinedRows row [] = []
+getLJoinedRows row (matchedRow:matches) = (row ++ matchedRow) : (getLJoinedRows row matches)
+
+-- getRJoinedRows
+        -- @brief:
+        -- @params: 
+        -- @return:
+getRJoinedRows :: [Row] -> Row -> [Row]
+getRJoinedRows [] row = []
+getRJoinedRows (matchedRow:matches) row  = (matchedRow ++ row) : (getRJoinedRows matches row)
 
 ------------
 -- FORMAT -- 
@@ -717,15 +744,6 @@ getRowFromColValue :: Int -> Cell -> Table -> Row
 getRowFromColValue col cell [] = []
 getRowFromColValue col cell (row:rows) | cell == (row!!col) = row
                                        | otherwise = getRowFromColValue col cell rows
-
--- getRowsFromColValue
-        -- @brief:
-        -- @params: 
-        -- @return:
-getRowsFromColValue :: Int -> Cell -> Table -> [Row]
-getRowsFromColValue col cell [] = []
-getRowsFromColValue col cell (row:rows) | cell == (row!!col) = row : getRowsFromColValue col cell rows
-                                        | otherwise = getRowsFromColValue col cell rows
 
 -- getTableFromLimit
         -- @brief:

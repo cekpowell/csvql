@@ -1,13 +1,16 @@
-LET var1 = READ "A.csv";
-LET var2 = READ "B.csv";
+LET a = READ "a.csv";
+LET b = READ "B.csv";
 
-RETURN UPDATE [@0 = "0"] (INSERT COLUMN @0 var1);
+RETURN JOIN INNER ON LEFT.@0 != RIGHT.@1 a b;
 
---/
 
-this is a multiline comment.
 
-/--
+-- ==================================== --
+-- ======== STANDARD PROBLEMS ========= --
+-- ==================================== --
+
+
+
 
 ---------------
 -- PROBLEM 1 -- 
@@ -84,6 +87,103 @@ this is a multiline comment.
 
 -- LET joinedTable = JOIN table table;
 
--- LET insertedColumn = INSERT COLUMN @1 "0" joinedTable;
+-- LET insertedColumn = INSERT COLUMN @1 joinedTable;
 
--- RETURN ORDER BY ASC insertedColumn;
+-- LET updatedTable = UPDATE [@1 = "0"] insertedColumn
+
+-- RETURN ORDER BY ASC updatedTable;
+
+
+
+
+-- ==================================== --
+-- ======= ADDITIONAL PROBLEMS ======== --
+-- ==================================== --
+
+
+
+
+---------------
+-- PROBLEM 6 -- 
+---------------
+
+--/
+
+LET p = READ "P.csv";
+LET q = READ "Q.csv";
+LET r = READ "R.csv";
+LET s = READ "S.csv";
+LET t = READ "T.csv";
+
+LET joinedTable = JOIN FULL p (JOIN FULL q (JOIN FULL s (JOIN FULL r t)))
+
+RETURN ORDER BY ASC joinedTable;
+
+/--
+
+
+---------------
+-- PROBLEM 7 -- 
+---------------
+
+--/
+
+LET f = READ "F.csv";
+LET g = READ "G.csv";
+
+LET joinedTables = JOIN FULL f g;
+
+LET whereTable = SELECT * WHERE [@1 != "" AND @2 != "", @1 == @3 AND @2 == @4] joinedTables;
+
+LET neededColumns = SELECT [@0, @5] whereTable
+
+RETURN ORDER BY ASC neededColumns;
+
+/--
+
+---------------
+-- PROBLEM 8 -- 
+---------------
+
+
+-- todo...
+
+
+---------------
+-- PROBLEM 9 -- 
+---------------
+
+--/
+
+LET r = READ "R.csv";
+
+LET joinedTable = (JOIN FULL r (JOIN FULL r r));
+
+LET paths = SELECT * WHERE [@1 == @2, @3 == @4] joinedTable;
+
+LET startAndEnd = SELECT [@0, @5] paths;
+
+RETURN ORDER BY ASC startAndEnd;
+
+/--
+
+----------------
+-- PROBLEM 10 -- 
+----------------
+
+--/
+
+LET s = READ "S.csv";
+LET t = READ "T.csv";
+
+LET joinedTable = JOIN FULL s t;
+
+LET whereTable = SELECT * WHERE [@0 == @1] joinedTable;
+
+LET selectTable = SELECT [@2, @3] whereTable;
+
+LET uniqueRows  = UNIQUE selectTable;
+
+RETURN ORDER BY ASC uniqueRows;
+
+/--
