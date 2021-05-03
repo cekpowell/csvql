@@ -600,8 +600,12 @@ getTableFromFormat (Last num tableType) vars                  = do
                                                                 return lastTable
 getTableFromFormat (Unique tableType) vars                    = do
                                                                 table <- getTableFromType tableType vars
-                                                                let uniqueTable = getUniqueTable table
+                                                                let uniqueTable = getTableFromUnique table
                                                                 return uniqueTable 
+getTableFromFormat (Transpose tableType) vars                    = do
+                                                                table <- getTableFromType tableType vars
+                                                                let transposeTable = getTableFromTranspose table
+                                                                return transposeTable 
 
 -- getTableFromOrder
         -- @brief:
@@ -674,14 +678,20 @@ getTableFromOffset offset table = drop offset table
 getTableFromLast :: Int -> Table -> Table
 getTableFromLast lastNum table = drop ((length table) - (lastNum)) table
 
--- getUniqueTable
+-- getTableFromUnique
         -- @brief:
         -- @params: 
         -- @return:
-getUniqueTable :: Table -> Table
-getUniqueTable table = nub table
+getTableFromUnique :: Table -> Table
+getTableFromUnique table = nub table
 
 
+-- getTableFromTranspose
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromTranspose :: Table -> Table
+getTableFromTranspose table = transpose table
 
 
 -- ============================================ --

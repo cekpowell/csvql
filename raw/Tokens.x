@@ -43,6 +43,7 @@ $white+              ;
   OFFSET        { \p s -> TokenOffset p }
   LAST          { \p s -> TokenLast p }
   UNIQUE        { \p s -> TokenUnique p }
+  TRANSPOSE     { \p s -> TokenTranspose p }
   "="           { \p s -> TokenAssign p }
   "=="          { \p s -> TokenEq p }
   "<"           { \p s -> TokenLessThan p }
@@ -105,6 +106,7 @@ data Token = TokenRead AlexPosn
               | TokenOffset AlexPosn
               | TokenLast AlexPosn
               | TokenUnique AlexPosn
+              | TokenTranspose AlexPosn
 
               | TokenAssign AlexPosn
 
@@ -171,6 +173,7 @@ tokenPosn (TokenLimit (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenOffset (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLast (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenUnique (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenTranspose (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 
 tokenPosn (TokenAssign (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 

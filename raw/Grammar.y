@@ -38,6 +38,7 @@ import Tokens
     Offset   { TokenOffset _ }
     Last     { TokenLast _ }
     Unique   { TokenUnique _ }
+    Transpose { TokenTranspose _ }
     '='      { TokenAssign _ }
     "=="     { TokenEq _ }
     "<"      { TokenLessThan _ }
@@ -109,6 +110,7 @@ FormatFunction: Order By Direction TableType { OrderBy $3 $4 }
               | Offset int TableType { Offset $2 $3 }
               | Last int TableType { Last $2 $3 }
               | Unique TableType { Unique $2 }
+              | Transpose TableType { Transpose $2 }
 
 Direction : Asc { Asc }
           | Desc { Desc }
@@ -202,6 +204,7 @@ data FormatFunction = OrderBy Direction TableType
                     | Offset Int TableType
                     | Last Int TableType
                     | Unique TableType
+                    | Transpose TableType
                       deriving (Show, Eq)
 
 data Predicate = Not Predicate 

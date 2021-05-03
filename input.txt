@@ -1,7 +1,7 @@
 LET var1 = READ "A.csv";
 LET var2 = READ "B.csv";
 
-RETURN INTERSECTION var1 var2;
+RETURN TRANSPOSE var1;
 
 --/
 
