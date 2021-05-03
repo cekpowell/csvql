@@ -16,7 +16,7 @@ import Data.Char (isSpace)
 
 -- ADDITIONAL DEPENDENCIES 
         -- Data.List.Split
-        -- "array" in CQLanguage.cabal
+        -- "array" in CQLanguage.cabal (not sure what it's used for)
 
 ------------------------
 -- Type  Declarations -- 
@@ -106,7 +106,8 @@ mainPrettyPrint = do
 eval :: Exp -> Vars -> IO Table
 eval (Let varName tableType exp) vars  = do 
                                                 table <- getTableFromType tableType vars
-                                                eval exp (updateVars (varName, table) vars)                                                        
+                                                let updatedVars = updateVars (varName, table) vars
+                                                eval exp updatedVars                                                       
 eval (Return tableType) vars           = getTableFromType tableType vars
 
 
@@ -184,10 +185,10 @@ getTableFromFunction :: FunctionTable -> Vars -> IO Table
 getTableFromFunction (Select selectFunction) vars = getTableFromSelect selectFunction vars
 getTableFromFunction (Insert insertFunction) vars = getTableFromInsert insertFunction vars
 getTableFromFunction (Delete deleteFunction) vars = getTableFromDelete deleteFunction vars
+getTableFromFunction (Update updateFunction) vars = getTableFromUpdate updateFunction vars
+getTableFromFunction (Set setFunction) vars       = getTableFromSet    setFunction    vars 
+getTableFromFunction (Join joinFunction) vars     = getTableFromJoin   joinFunction   vars
 getTableFromFunction (Format formatFunction) vars = getTableFromFormat formatFunction vars
-getTableFromFunction (Set setFunction) vars       = getTableFromSet setFunction vars 
-getTableFromFunction (Join joinFunction) vars     = getTableFromJoin joinFunction vars
-
 
 
 
@@ -304,9 +305,6 @@ getTableFromDelete (DeleteAllWhere predicates tableType) vars = do
                                                                 return deleteTable
 
 
-
--- sort the list of columns into descending order, and then dont need to account for change in index
-
 -- deleteTableCols
         -- @brief:
         -- @params: 
@@ -315,7 +313,7 @@ deleteTableCols :: [Int] -> Table -> Table
 deleteTableCols cols []         = []
 deleteTableCols cols (row:rows) = newRow : (deleteTableCols cols rows)
         where
-                sortedCols = reverse (sort cols)
+                sortedCols = reverse (sort cols) -- sort the list of columns into descending order, and then dont need to account for change in index
                 newRow = deleteRowCols sortedCols row
 
 -- deleteRowCols
@@ -387,12 +385,30 @@ satisfyOperator GreaterThanEq val1 val2  = val1 >= val2
 satisfyOperator NotEq val1 val2          = val1 /= val2
 
 
+------------
+-- UPDATE --
+------------ 
+
+-- todo... 
+
+-- getTableFromUpdate
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromUpdate :: UpdateFunction -> Vars -> IO Table
+getTableFromUpdate (UpdateAll assignments tableType) = return []
+getTableFromUpdate (UpdateWhere assignments predicates tableType) = return []
+
+
 -------------------
 -- SET FUNCTIONS --
 -------------------
 
 
-
+-- getTableFromSet
+        -- @brief:
+        -- @params: 
+        -- @return:
 getTableFromSet :: SetFunction -> Vars -> IO Table
 getTableFromSet (Union tableType1 tableType2) vars         = do
                                                                 table1 <- getTableFromType tableType1 vars

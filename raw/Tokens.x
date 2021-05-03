@@ -24,6 +24,8 @@ $white+              ;
   NOT           { \p s -> TokenNot p }
   AND           { \p s -> TokenAnd p }
   OR            { \p s -> TokenOr p }
+  UPDATE        { \p s -> TokenUpdate p }
+  SET           { \p s -> TokenSet p }
   UNION         { \p s -> TokenUnion p }
   ALL           { \p s -> TokenAll p }
   INTERSECTION  { \p s -> TokenIntersection p }
@@ -84,6 +86,9 @@ data Token = TokenRead AlexPosn
               | TokenNot AlexPosn
               | TokenAnd AlexPosn
               | TokenOr AlexPosn 
+
+              | TokenUpdate AlexPosn
+              | TokenSet AlexPosn
 
               | TokenUnion AlexPosn
               | TokenAll AlexPosn
@@ -151,6 +156,9 @@ tokenPosn (TokenWhere (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenNot (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAnd (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenOr (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+
+tokenPosn (TokenUpdate (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenSet (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 
 tokenPosn (TokenUnion (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAll (AlexPn a l c)) = show(l) ++ ":" ++ show(c)

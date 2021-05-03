@@ -19,6 +19,8 @@ import Tokens
     Not      { TokenNot _ }
     And      { TokenAnd _ }
     Or       { TokenOr _ }
+    Update   { TokenUpdate _ }
+    Set      { TokenSet _ }
     Union    { TokenUnion _ }
     All      { TokenAll _ }
     Intersection { TokenIntersection _ }
@@ -73,6 +75,7 @@ TableType : Read Filename { Read $2 }
 FunctionTable : SelectFunction { Select $1 }
               | InsertFunction { Insert $1 }
               | DeleteFunction { Delete $1 }
+              | UpdateFunction { Update $1 }
               | SetFunction    { Set $1 }
               | JoinFunction   { Join $1 }
               | FormatFunction { Format $1 }
@@ -82,12 +85,15 @@ SelectFunction : Select '*' TableType { SelectAll $3 }
                | Select '*' Where List(Predicate) TableType { SelectAllWhere $4 $5 }
                | Select List(ColumnRef) Where List(Predicate) TableType { SelectColWhere $2 $4 $5 }
 
+InsertFunction : Insert Values List(Str) TableType { InsertValues $3 $4 }
+               | Insert Column ColumnRef Str TableType { InsertColumn $3 $4 $5}
+
 DeleteFunction : Delete TableType { DeleteAll $2}
                | Delete List(ColumnRef) TableType { DeleteCol $2 $3 }
                | Delete Where List(Predicate) TableType { DeleteAllWhere $3 $4 }
 
-InsertFunction : Insert Values List(Str) TableType { InsertValues $3 $4 }
-               | Insert Column ColumnRef Str TableType { InsertColumn $3 $4 $5}
+UpdateFunction : Update List(Assignment) TableType { UpdateAll $2 $3 }
+               | Update List(Assignment) Where List(Predicate) TableType {UpdateWhere $2 $4 $5 }
 
 SetFunction : Union TableType TableType { Union $2 $3 }
             | Intersection TableType TableType { Intersection $2 $3 }
@@ -99,10 +105,6 @@ JoinFunction : Join TableType TableType { JoinStandard $2 $3 }
              | Join Right On TableComparison TableType TableType { JoinRight $4 $5 $6 }
              | Join Outer On TableComparison TableType TableType { JoinOuter $4 $5 $6 }
              | Join Full TableType TableType {JoinFull $3 $4 }
-
-TableComparison : Left '.' ColumnRef "==" Right '.' ColumnRef { TableComparison $3 $7 }
-
-TableColumnRef : Var '.' ColumnRef { TableColumnRef $1 $3 }
                
 FormatFunction: Order By Direction TableType { OrderBy $3 $4 }
               | Order By List(ColumnRef) Direction TableType { OrderByCol $3 $4 $5 }
@@ -111,6 +113,10 @@ FormatFunction: Order By Direction TableType { OrderBy $3 $4 }
               | Last int TableType { Last $2 $3 }
               | Unique TableType { Unique $2 }
               | Transpose TableType { Transpose $2 }
+
+TableComparison : Left '.' ColumnRef "==" Right '.' ColumnRef { TableComparison $3 $7 }
+
+TableColumnRef : Var '.' ColumnRef { TableColumnRef $1 $3 }
 
 Direction : Asc { Asc }
           | Desc { Desc }
@@ -137,7 +143,8 @@ ComparisonOperator : "==" { Eq }
                    | ">=" { GreaterThanEq }
                    | "!=" { NotEq }
 
-    
+Assignment : ColumnRef '=' Str { Assignment $1 $3 }
+
 { 
 parseError :: [Token] -> a
 parseError [] = error "Unknown parse error"
@@ -159,6 +166,7 @@ data Direction = Asc
 data FunctionTable = Select SelectFunction
                    | Insert InsertFunction
                    | Delete DeleteFunction
+                   | Update UpdateFunction
                    | Set SetFunction
                    | Join JoinFunction
                    | Format FormatFunction
@@ -170,13 +178,17 @@ data SelectFunction = SelectAll TableType
                     | SelectColWhere [Int] [Predicate] TableType
                       deriving (Show, Eq)
 
+data InsertFunction = InsertValues [String] TableType
+                    | InsertColumn Int String TableType
+                      deriving (Show, Eq)
+
 data DeleteFunction = DeleteAll TableType
                     | DeleteCol [Int] TableType
                     | DeleteAllWhere [Predicate] TableType
                       deriving (Show, Eq)
 
-data InsertFunction = InsertValues [String] TableType
-                    | InsertColumn Int String TableType
+data UpdateFunction = UpdateAll [Assignment] TableType
+                    | UpdateWhere [Assignment] [Predicate] TableType
                       deriving (Show, Eq)
 
 data SetFunction = Union TableType TableType
@@ -224,5 +236,8 @@ data ComparisonOperator = Eq
                         | GreaterThanEq 
                         | NotEq 
                           deriving (Show, Eq)
+
+data Assignment = Assignment Int String
+                  deriving (Show, Eq)
 
 }
