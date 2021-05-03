@@ -396,9 +396,52 @@ satisfyOperator NotEq val1 val2          = val1 /= val2
         -- @params: 
         -- @return:
 getTableFromUpdate :: UpdateFunction -> Vars -> IO Table
-getTableFromUpdate (UpdateAll assignments tableType) = return []
-getTableFromUpdate (UpdateWhere assignments predicates tableType) = return []
+getTableFromUpdate (UpdateAll assignments tableType) vars              = do
+                                                                        table <- getTableFromType tableType vars
+                                                                        let updateTable = getTableFromUpdateAll assignments table
+                                                                        return updateTable
+getTableFromUpdate (UpdateWhere assignments predicates tableType) vars = do
+                                                                        table <- getTableFromType tableType vars
+                                                                        let updateTable = getTableFromUpdateWhere assignments predicates table
+                                                                        return updateTable
 
+-- getTableFromUpdate
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromUpdateAll :: [Assignment] -> Table -> Table
+getTableFromUpdateAll [] table = table
+getTableFromUpdateAll (a:as) table = getTableFromUpdateAll as updatedTable
+        where
+                updatedTable = getTableFromAssignment a table
+
+-- getTableFromUpdate
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromAssignment :: Assignment -> Table -> Table
+getTableFromAssignment assignment [] = []
+getTableFromAssignment (Assignment col val) (row:rows) = (getRowFromAssignment col val row) : (getTableFromAssignment (Assignment col val) rows)
+
+
+getTableFromUpdateWhere :: [Assignment] -> [Predicate] -> Table -> Table
+getTableFromUpdateWhere assignments predicates table = let 
+                                                                tableFromWhere = getTableFromWhere predicates table
+                                                        in 
+                                                                getTableFromUpdateWhereAux assignments tableFromWhere table
+
+getTableFromUpdateWhereAux :: [Assignment] -> Table -> Table -> Table
+getTableFromUpdateWhereAux assignments whereTable []                     = []
+getTableFromUpdateWhereAux assignments whereTable (row:rows) | contains row whereTable = (getTableFromUpdateAll assignments [row]) ++ getTableFromUpdateWhereAux assignments whereTable rows
+                                                             | otherwise = row : getTableFromUpdateWhereAux assignments whereTable rows
+
+-- getRowFromAssignment
+        -- @brief:
+        -- @params: 
+        -- @return:
+getRowFromAssignment :: Int -> String -> Row -> Row
+getRowFromAssignment 0 val (cell:cells)      = val:cells
+getRowFromAssignment colNum val (cell:cells) = cell : (getRowFromAssignment (colNum - 1) val cells)
 
 -------------------
 -- SET FUNCTIONS --
