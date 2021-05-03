@@ -1,7 +1,7 @@
 LET a = READ "a.csv";
 LET b = READ "B.csv";
 
-RETURN JOIN INNER ON LEFT.@0 != RIGHT.@1 a b;
+RETURN JOIN a b;
 
 
 

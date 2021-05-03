@@ -82,28 +82,28 @@ FunctionTable : SelectFunction { Select $1 }
 
 SelectFunction : Select '*' TableType { SelectAll $3 }
                | Select List(ColumnRef) TableType { SelectCol $2 $3 }
-               | Select '*' Where List(Predicate) TableType { SelectAllWhere $4 $5 }
-               | Select List(ColumnRef) Where List(Predicate) TableType { SelectColWhere $2 $4 $5 }
+               | Select '*' Where List(Predicate(ColumnComparison)) TableType { SelectAllWhere $4 $5 }
+               | Select List(ColumnRef) Where List(Predicate(ColumnComparison)) TableType { SelectColWhere $2 $4 $5 }
 
 InsertFunction : Insert Values List(Str) TableType { InsertValues $3 $4 }
                | Insert Column ColumnRef TableType { InsertColumn $3 $4 }
 
 DeleteFunction : Delete TableType { DeleteAll $2}
                | Delete List(ColumnRef) TableType { DeleteCol $2 $3 }
-               | Delete Where List(Predicate) TableType { DeleteAllWhere $3 $4 }
+               | Delete Where List(Predicate(ColumnComparison)) TableType { DeleteAllWhere $3 $4 }
 
 UpdateFunction : Update List(Assignment) TableType { UpdateAll $2 $3 }
-               | Update List(Assignment) Where List(Predicate) TableType {UpdateWhere $2 $4 $5 }
+               | Update List(Assignment) Where List(Predicate(ColumnComparison)) TableType {UpdateWhere $2 $4 $5 }
 
 SetFunction : Union TableType TableType { Union $2 $3 }
             | Intersection TableType TableType { Intersection $2 $3 }
             | Difference TableType TableType { Difference $2 $3 }
 
 JoinFunction : Join TableType TableType { JoinStandard $2 $3 }
-             | Join Inner On TableComparison TableType TableType { JoinInner $4 $5 $6 }
-             | Join Left On TableComparison TableType TableType { JoinLeft $4 $5 $6 }
-             | Join Right On TableComparison TableType TableType { JoinRight $4 $5 $6 }
-             | Join Outer On TableComparison TableType TableType { JoinOuter $4 $5 $6 }
+             | Join Inner On List(Predicate(TableComparison)) TableType TableType { JoinInner $4 $5 $6 }
+             | Join Left On List(Predicate(TableComparison)) TableType TableType { JoinLeft $4 $5 $6 }
+             | Join Right On List(Predicate(TableComparison)) TableType TableType { JoinRight $4 $5 $6 }
+             | Join Outer On List(Predicate(TableComparison)) TableType TableType { JoinOuter $4 $5 $6 }
              | Join Full TableType TableType {JoinFull $3 $4 }
                
 FormatFunction: Order By Direction TableType { OrderBy $3 $4 }
@@ -114,25 +114,22 @@ FormatFunction: Order By Direction TableType { OrderBy $3 $4 }
               | Unique TableType { Unique $2 }
               | Transpose TableType { Transpose $2 }
 
+List (a)     : '[' ']'       { [] }
+             | '[' ListCont (a) ']'  { $2 }
+ListCont (a) : a           { [$1] }
+             | a ',' ListCont (a)  { [$1] ++ $3}
+
+Predicate (a) : Not Predicate (a)  { Not $2 }
+              | Predicate (a) And Predicate (a) { And $1 $3 }
+              | Predicate (a) Or Predicate (a) { Or $1 $3  }
+              | a     { Comparison $1 }
+
 TableComparison : Left '.' ColumnRef ComparisonOperator Right '.' ColumnRef { TableComparison $3 $4 $7 }
 
 TableColumnRef : Var '.' ColumnRef { TableColumnRef $1 $3 }
 
-Direction : Asc { Asc }
-          | Desc { Desc }
-
-List (a) : '[' ']'       { [] }
-         | '[' ListCont (a) ']'  { $2 }
-ListCont (a) : a           { [$1] }
-             | a ',' ListCont (a)  { [$1] ++ $3}
-
-Predicate : Not Predicate  { Not $2 }
-          | Predicate And Predicate { And $1 $3 }
-          | Predicate Or Predicate { Or $1 $3  }
-          | Comparison     { Comparison $1}
-
-Comparison : ColumnRef ComparisonOperator Str      { ColVal $1 $2 $3 }
-           | ColumnRef ComparisonOperator ColumnRef  { ColCol $1 $2 $3 }
+ColumnComparison : ColumnRef ComparisonOperator Str      { ColVal $1 $2 $3 }
+                 | ColumnRef ComparisonOperator ColumnRef  { ColCol $1 $2 $3 }
 
 ColumnRef : "@" int { $2 }
 
@@ -144,6 +141,9 @@ ComparisonOperator : "==" { Eq }
                    | "!=" { NotEq }
 
 Assignment : ColumnRef '=' Str { Assignment $1 $3 }
+
+Direction : Asc { Asc }
+          | Desc { Desc }
 
 { 
 parseError :: [Token] -> a
@@ -174,8 +174,8 @@ data FunctionTable = Select SelectFunction
 
 data SelectFunction = SelectAll TableType
                     | SelectCol [Int] TableType
-                    | SelectAllWhere [Predicate] TableType
-                    | SelectColWhere [Int] [Predicate] TableType
+                    | SelectAllWhere [Predicate(ColumnComparison)] TableType
+                    | SelectColWhere [Int] [Predicate(ColumnComparison)] TableType
                       deriving (Show, Eq)
 
 data InsertFunction = InsertValues [String] TableType
@@ -184,11 +184,11 @@ data InsertFunction = InsertValues [String] TableType
 
 data DeleteFunction = DeleteAll TableType
                     | DeleteCol [Int] TableType
-                    | DeleteAllWhere [Predicate] TableType
+                    | DeleteAllWhere [Predicate(ColumnComparison)] TableType
                       deriving (Show, Eq)
 
 data UpdateFunction = UpdateAll [Assignment] TableType
-                    | UpdateWhere [Assignment] [Predicate] TableType
+                    | UpdateWhere [Assignment] [Predicate(ColumnComparison)] TableType
                       deriving (Show, Eq)
 
 data SetFunction = Union TableType TableType
@@ -197,12 +197,18 @@ data SetFunction = Union TableType TableType
                    deriving (Show, Eq)
 
 data JoinFunction = JoinStandard TableType TableType
-                  | JoinInner TableComparison TableType TableType 
-                  | JoinLeft TableComparison TableType TableType 
-                  | JoinRight TableComparison TableType TableType 
-                  | JoinOuter TableComparison TableType TableType 
+                  | JoinInner [Predicate(TableComparison)] TableType TableType 
+                  | JoinLeft [Predicate(TableComparison)] TableType TableType 
+                  | JoinRight [Predicate(TableComparison)] TableType TableType 
+                  | JoinOuter [Predicate(TableComparison)] TableType TableType 
                   | JoinFull TableType TableType
                     deriving (Show, Eq)
+
+data Predicate a = Not (Predicate a)
+                 | And (Predicate a) (Predicate a)
+                 | Or (Predicate a) (Predicate a)
+                 | Comparison a
+                 deriving (Show, Eq)
 
 data TableComparison = TableComparison Int ComparisonOperator Int
                        deriving (Show, Eq)
@@ -210,23 +216,8 @@ data TableComparison = TableComparison Int ComparisonOperator Int
 data TableColumnRef = TableColumnRef String Int
                       deriving (Show, Eq)
 
-data FormatFunction = OrderBy Direction TableType
-                    | OrderByCol [Int] Direction TableType
-                    | Limit Int TableType
-                    | Offset Int TableType
-                    | Last Int TableType
-                    | Unique TableType
-                    | Transpose TableType
-                      deriving (Show, Eq)
-
-data Predicate = Not Predicate 
-               | And Predicate Predicate
-               | Or Predicate Predicate
-               | Comparison ComparisonType 
-                 deriving (Show, Eq)
-
-data ComparisonType = ColVal Int ComparisonOperator String
-                    | ColCol Int ComparisonOperator Int
+data ColumnComparison = ColVal Int ComparisonOperator String
+                      | ColCol Int ComparisonOperator Int
                       deriving (Show, Eq)
 
 data ComparisonOperator = Eq 
@@ -239,5 +230,14 @@ data ComparisonOperator = Eq
 
 data Assignment = Assignment Int String
                   deriving (Show, Eq)
+
+data FormatFunction = OrderBy Direction TableType
+                    | OrderByCol [Int] Direction TableType
+                    | Limit Int TableType
+                    | Offset Int TableType
+                    | Last Int TableType
+                    | Unique TableType
+                    | Transpose TableType
+                      deriving (Show, Eq)
 
 }
