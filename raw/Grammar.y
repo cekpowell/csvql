@@ -19,6 +19,7 @@ import Tokens
     Not          { TokenNot _ }
     And          { TokenAnd _ }
     Or           { TokenOr _ }
+    Index        { TokenIndex _ }
     Update       { TokenUpdate _ }
     Set          { TokenSet _ }
     Union        { TokenUnion _ }
@@ -54,6 +55,10 @@ import Tokens
     ','          { TokenComma _ }     
     '.'          { TokenDot _ }
     '*'          { TokenAst _ } 
+    '+'          { TokenAdd _ }
+    '-'          { TokenSubtract _ }
+    "/"          { TokenDivide _ }
+    '%'          { TokenModulo _ }
     "@"          { TokenAt _ } 
     '('          { TokenLParen _ }
     ')'          { TokenRParen _ }
@@ -124,14 +129,15 @@ Predicate (a) : Not Predicate (a)               { Not $2 }
               | Predicate (a) Or Predicate (a)  { Or $1 $3  }
               | a                               { Comparison $1 }
 
+ColumnComparison : ColumnRef ComparisonOperator Str              { ColVal $1 $2 $3 }
+                 | ColumnRef ComparisonOperator ColumnRef        { ColCol $1 $2 $3 }
+                 | Index Operator int ComparisonOperator int { IndexVal $2 $3 $4 $5 }
+
+ColumnRef : "@" int { $2 }
+
 TableComparison : Left '.' ColumnRef ComparisonOperator Right '.' ColumnRef { TableComparison $3 $4 $7 }
 
 TableColumnRef : Var '.' ColumnRef { TableColumnRef $1 $3 }
-
-ColumnComparison : ColumnRef ComparisonOperator Str       { ColVal $1 $2 $3 }
-                 | ColumnRef ComparisonOperator ColumnRef { ColCol $1 $2 $3 }
-
-ColumnRef : "@" int { $2 }
 
 ComparisonOperator : "==" { Eq } 
                    | "<"  { LessThan }
@@ -139,6 +145,12 @@ ComparisonOperator : "==" { Eq }
                    | "<=" { LessThanEq }
                    | ">=" { GreaterThanEq }
                    | "!=" { NotEq }
+
+Operator : '+' { Add }
+         | '-' { Subtract }
+         | "/" { Divide }
+         | '*' { Multiply }
+         | '%' { Modulo }
 
 Assignment : ColumnRef '=' Str { Assignment $1 $3 }
 
@@ -217,16 +229,17 @@ data Predicate a = Not (Predicate a)
                  | And (Predicate a) (Predicate a)
                  | Or (Predicate a) (Predicate a)
                  | Comparison a
-                 deriving (Show, Eq)
+                   deriving (Show, Eq)
+
+data ColumnComparison = ColVal Int ComparisonOperator String
+                      | ColCol Int ComparisonOperator Int
+                      | IndexVal Operator Int ComparisonOperator Int
+                        deriving (Show, Eq)
 
 data TableComparison = TableComparison Int ComparisonOperator Int
                        deriving (Show, Eq)
 
 data TableColumnRef = TableColumnRef String Int
-                      deriving (Show, Eq)
-
-data ColumnComparison = ColVal Int ComparisonOperator String
-                      | ColCol Int ComparisonOperator Int
                       deriving (Show, Eq)
 
 data ComparisonOperator = Eq 
@@ -236,6 +249,13 @@ data ComparisonOperator = Eq
                         | GreaterThanEq 
                         | NotEq 
                           deriving (Show, Eq)
+
+data Operator = Add 
+              | Subtract 
+              | Divide 
+              | Multiply 
+              | Modulo 
+                deriving (Show, Eq)
 
 data Assignment = Assignment Int String
                   deriving (Show, Eq)

@@ -24,6 +24,7 @@ $white+              ;
   NOT           { \p s -> TokenNot p }
   AND           { \p s -> TokenAnd p }
   OR            { \p s -> TokenOr p }
+  INDEX         { \p s -> TokenIndex p }
   UPDATE        { \p s -> TokenUpdate p }
   SET           { \p s -> TokenSet p }
   UNION         { \p s -> TokenUnion p }
@@ -59,6 +60,10 @@ $white+              ;
   ","           { \p s -> TokenComma p }
   "."           { \p s -> TokenDot p }
   "*"           { \p s -> TokenAst p }
+  "+"           { \p s -> TokenAdd p }
+  "-"           { \p s -> TokenSubtract p }
+  "/"           { \p s -> TokenDivide p }
+  "%"           { \p s -> TokenModulo p }
   "@"           { \p s -> TokenAt p } 
   "("           { \p s -> TokenLParen p }
   ")"           { \p s -> TokenRParen p }
@@ -86,6 +91,7 @@ data Token = TokenRead AlexPosn
               | TokenNot AlexPosn
               | TokenAnd AlexPosn
               | TokenOr AlexPosn 
+              | TokenIndex AlexPosn
 
               | TokenUpdate AlexPosn
               | TokenSet AlexPosn
@@ -128,6 +134,10 @@ data Token = TokenRead AlexPosn
               | TokenComma AlexPosn
               | TokenDot AlexPosn
               | TokenAst AlexPosn
+              | TokenAdd AlexPosn
+              | TokenSubtract AlexPosn
+              | TokenDivide AlexPosn
+              | TokenModulo AlexPosn
               | TokenAt AlexPosn
               | TokenLParen AlexPosn
               | TokenRParen AlexPosn
@@ -156,6 +166,7 @@ tokenPosn (TokenWhere (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenNot (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAnd (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenOr (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenIndex (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 
 tokenPosn (TokenUpdate (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenSet (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
@@ -199,6 +210,10 @@ tokenPosn (TokenComma (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenDot (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAst (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAt (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenAdd (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenSubtract (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenDivide (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenModulo (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLParen (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenRParen (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 

@@ -413,46 +413,61 @@ getRowFromAssignment colNum val (cell:cells) = cell : (getRowFromAssignment (col
         -- @return:
 getTableFromWhere :: [Predicate(ColumnComparison)] -> Table ->  Table
 getTableFromWhere [] table           = table
-getTableFromWhere (pred:preds) table = getTableFromWhere preds (getRowsFromColumnPredicate pred table)
+getTableFromWhere (pred:preds) table = getTableFromWhere preds (getRowsFromColumnPredicate pred table 0)
 
 -- getRowsFromColumnPredicate
         -- @brief:
         -- @params: 
         -- @return:
-getRowsFromColumnPredicate :: Predicate(ColumnComparison) -> Table -> Table
-getRowsFromColumnPredicate pred [] = []
-getRowsFromColumnPredicate pred (row:rows) | rowSatisfyColumnPredicate pred row = row : (getRowsFromColumnPredicate pred rows)
-                                           | otherwise                         = getRowsFromColumnPredicate pred rows
+getRowsFromColumnPredicate :: Predicate(ColumnComparison) -> Table -> Int -> Table
+getRowsFromColumnPredicate pred [] index = []
+getRowsFromColumnPredicate pred (row:rows) index | rowSatisfyColumnPredicate pred row index = row : (getRowsFromColumnPredicate pred rows (index+1))
+                                                 | otherwise                                = getRowsFromColumnPredicate pred rows (index+1)
+        
 
 -- rowSatisfyColumnPredicate
         -- @brief:
         -- @params: 
         -- @return:
-rowSatisfyColumnPredicate :: Predicate(ColumnComparison) -> Row -> Bool
-rowSatisfyColumnPredicate (Not predicate) row             = not (rowSatisfyColumnPredicate predicate row)
-rowSatisfyColumnPredicate (And predicate1 predicate2) row = and [(rowSatisfyColumnPredicate predicate1 row),  (rowSatisfyColumnPredicate predicate2 row)]
-rowSatisfyColumnPredicate (Or predicate1 predicate2) row  = or  [(rowSatisfyColumnPredicate predicate1 row),  (rowSatisfyColumnPredicate predicate2 row)]
-rowSatisfyColumnPredicate (Comparison columnComparison) row = rowSatisfyColumnComparison columnComparison row
+rowSatisfyColumnPredicate :: Predicate(ColumnComparison) -> Row -> Int -> Bool
+rowSatisfyColumnPredicate (Not predicate) row index               = not (rowSatisfyColumnPredicate predicate row index)
+rowSatisfyColumnPredicate (And predicate1 predicate2) row index   = and [(rowSatisfyColumnPredicate predicate1 row index),  (rowSatisfyColumnPredicate predicate2 row index)]
+rowSatisfyColumnPredicate (Or predicate1 predicate2) row index    = or  [(rowSatisfyColumnPredicate predicate1 row index),  (rowSatisfyColumnPredicate predicate2 row index)]
+rowSatisfyColumnPredicate (Comparison columnComparison) row index = rowSatisfyColumnComparison columnComparison row index
 
 -- rowSatisfyColumnComparison
         -- @brief:
         -- @params: 
         -- @return:
-rowSatisfyColumnComparison :: ColumnComparison -> Row -> Bool
-rowSatisfyColumnComparison (ColVal col operator val) row   = satisfyOperator operator (row!!(col)) val
-rowSatisfyColumnComparison (ColCol col1 operator col2) row = satisfyOperator operator (row!!(col1)) (row!!(col2))
+rowSatisfyColumnComparison :: ColumnComparison -> Row -> Int -> Bool
+rowSatisfyColumnComparison (ColVal col cOperator val) row index               = satisfyCOperator cOperator (row!!(col)) val
+rowSatisfyColumnComparison (ColCol col1 cOperator col2) row index             = satisfyCOperator cOperator (row!!(col1)) (row!!(col2))
+rowSatisfyColumnComparison (IndexVal operator val cOperator result) row index = satisfyCOperator cOperator calcResult result
+        where
+                calcResult = evalOperatorExpression index operator val
 
--- satisfyOperator
+-- satisfyCOperator
         -- @brief:
         -- @params: 
         -- @return:
-satisfyOperator :: ComparisonOperator -> String -> String -> Bool
-satisfyOperator Eq val1 val2             = val1 == val2
-satisfyOperator LessThan val1 val2       = val1 < val2 
-satisfyOperator GreaterThan val1 val2    = val1 > val2
-satisfyOperator LessThanEq val1 val2     = val1 <= val2
-satisfyOperator GreaterThanEq val1 val2  = val1 >= val2
-satisfyOperator NotEq val1 val2          = val1 /= val2
+satisfyCOperator :: (Eq a, Ord a) => ComparisonOperator -> a -> a -> Bool
+satisfyCOperator Eq val1 val2             = val1 == val2
+satisfyCOperator LessThan val1 val2       = val1 < val2 
+satisfyCOperator GreaterThan val1 val2    = val1 > val2
+satisfyCOperator LessThanEq val1 val2     = val1 <= val2
+satisfyCOperator GreaterThanEq val1 val2  = val1 >= val2
+satisfyCOperator NotEq val1 val2          = val1 /= val2
+
+-- evalOperatorExpression
+        -- @brief:
+        -- @params: 
+        -- @return:
+evalOperatorExpression :: Int -> Operator -> Int -> Int
+evalOperatorExpression val1 Add val2 = val1 + val2
+evalOperatorExpression val1 Subtract val2 = val1 - val2
+evalOperatorExpression val1 Multiply val2 = val1 * val2
+evalOperatorExpression val1 Divide val2 = div val1 val2
+evalOperatorExpression val1 Modulo val2 = mod val1 val2
 
 
 -- ============================== -- 
@@ -521,9 +536,11 @@ getTableFromIntersection (row1:rows1) table2 | contains row1 table2 = row1 : get
 getTableFromDifference :: Table -> Table -> Table
 getTableFromDifference table1 table2 = table1 \\ table2
 
+
 -- ============================== -- 
 -- ============ JOIN ============ -- 
 -- ============================== -- 
+
 
 -- Standard Join = Connects two tables together without a codition (row 1 of left table paired with row 1 of right table, and so on...)
 -- Inner Join    = Connects two tables together in the cases where the condition is matched.
@@ -733,8 +750,8 @@ getRowsFromTablePredicate predicate row1 (row2:rows) | rowSatisfyTablePredicate 
         -- @return:
 rowSatisfyTablePredicate :: Predicate(TableComparison) -> Row -> Row -> Bool
 rowSatisfyTablePredicate (Not predicate)              row1 row2  = not (rowSatisfyTablePredicate predicate row1 row2)
-rowSatisfyTablePredicate (And predicate1 predicate2)  row1 row2  = and [(rowSatisfyTablePredicate predicate1 row1 row2),  (rowSatisfyTablePredicate predicate2 row1 row2)]
-rowSatisfyTablePredicate (Or predicate1 predicate2)   row1 row2  = or  [(rowSatisfyTablePredicate predicate1 row1 row2),  (rowSatisfyTablePredicate predicate2 row1 row2)]
+rowSatisfyTablePredicate (And predicate1 predicate2)  row1 row2  = and [(rowSatisfyTablePredicate predicate1 row1 row2), (rowSatisfyTablePredicate predicate2 row1 row2)]
+rowSatisfyTablePredicate (Or predicate1 predicate2)   row1 row2  = or  [(rowSatisfyTablePredicate predicate1 row1 row2), (rowSatisfyTablePredicate predicate2 row1 row2)]
 rowSatisfyTablePredicate (Comparison tableComparison) row1 row2  = rowSatisfyTableComparison tableComparison row1 row2
 
 -- rowSatisfyTableComparison
