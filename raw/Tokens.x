@@ -45,7 +45,9 @@ tokens :-
   ---------------
 
   SELECT        { \p s -> TokenSelect p }
+  FROM          { \p s -> TokenFrom p }
   INSERT        { \p s -> TokenInsert p }
+  INTO          { \p s -> TokenInto p }
   VALUES        { \p s -> TokenValues p }
   COLUMN        { \p s -> TokenColumn p }
   DELETE        { \p s -> TokenDelete p }
@@ -55,6 +57,7 @@ tokens :-
   OR            { \p s -> TokenOr p }
   INDEX         { \p s -> TokenIndex p }
   UPDATE        { \p s -> TokenUpdate p }
+  TO            { \p s -> TokenTo p }
   SET           { \p s -> TokenSet p }
   UNION         { \p s -> TokenUnion p }
   ALL           { \p s -> TokenAll p }
@@ -68,6 +71,7 @@ tokens :-
   FULL          { \p s -> TokenFull p }
   ON            { \p s -> TokenOn p }
   ORDER         { \p s -> TokenOrder p }
+  IN            { \p s -> TokenIn p }
   BY            { \p s -> TokenBy p }
   ASC           { \p s -> TokenAsc p }
   DESC          { \p s -> TokenDesc p }
@@ -145,7 +149,7 @@ data Token =
                 -----------------
                 -- EXPRESSIONS --
                 -----------------
-                
+
                 TokenSetup AlexPosn
               | TokenPrettyPrint AlexPosn
               | TokenRead AlexPosn 
@@ -159,10 +163,12 @@ data Token =
                 -- SELECT -- 
 
               | TokenSelect AlexPosn
+              | TokenFrom AlexPosn
 
                 -- INSERT -- 
 
               | TokenInsert AlexPosn
+              | TokenInto AlexPosn
               | TokenValues AlexPosn
               | TokenColumn AlexPosn
 
@@ -181,6 +187,7 @@ data Token =
                 -- UPDATE -- 
 
               | TokenUpdate AlexPosn
+              | TokenTo AlexPosn
 
                 -- SET OPERATIONS -- 
 
@@ -203,6 +210,7 @@ data Token =
                 -- FORMAT -- 
 
               | TokenOrder AlexPosn
+              | TokenIn AlexPosn
               | TokenBy AlexPosn
               | TokenAsc AlexPosn
               | TokenDesc AlexPosn
@@ -293,8 +301,10 @@ tokenPosn (TokenReturn (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 ---------------
 
 tokenPosn (TokenSelect (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenFrom (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 
 tokenPosn (TokenInsert (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenInto (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenValues (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenColumn (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 
@@ -307,8 +317,9 @@ tokenPosn (TokenOr (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenIndex (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 
 tokenPosn (TokenUpdate (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
-tokenPosn (TokenSet (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenTo (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 
+tokenPosn (TokenSet (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenUnion (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAll (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenIntersection (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
@@ -323,6 +334,7 @@ tokenPosn (TokenFull (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenOn (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 
 tokenPosn (TokenOrder (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenIn (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenBy (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAsc (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenDesc (AlexPn a l c)) = show(l) ++ ":" ++ show(c)

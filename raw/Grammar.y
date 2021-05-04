@@ -35,7 +35,9 @@ import Tokens
     ---------------
 
     Select       { TokenSelect _ }
+    From         { TokenFrom _ }
     Insert       { TokenInsert _ }
+    Into         { TokenInto _ }
     Values       { TokenValues _ }
     Column       { TokenColumn _ }
     Delete       { TokenDelete _ }
@@ -45,6 +47,7 @@ import Tokens
     Or           { TokenOr _ }
     Index        { TokenIndex _ }
     Update       { TokenUpdate _ }
+    To           { TokenTo _ }
     Set          { TokenSet _ }
     Union        { TokenUnion _ }
     All          { TokenAll _ }
@@ -58,6 +61,7 @@ import Tokens
     Full         { TokenFull _ }
     On           { TokenOn _ }
     Order        { TokenOrder _ }
+    In           { TokenIn _ }
     By           { TokenBy _ }
     Asc          { TokenAsc _ }
     Desc         { TokenDesc _ }
@@ -147,7 +151,7 @@ Program : Setup CurlyList(Configuration) Exp { SetupProgram $2 $3}
 Configuration : PrettyPrint { PrettyPrint }
 
 Exp : Let Var '=' TableType ';' Exp { Let $2 $4 $6 }
-    | Return TableType ';'            { Return $2 }
+    | Return TableType ';'          { Return $2 }
 
 -----------------
 -- TABLE TYPES --
@@ -176,51 +180,51 @@ FunctionTable : SelectFunction { Select $1 }
 
 -- SELECT FUNCTION --
 
-SelectFunction : Select '*' TableType                                                     { SelectAll $3 }
-               | Select List(ColumnRef) TableType                                         { SelectCol $2 $3 }
-               | Select '*' Where List(Predicate(ColumnComparison)) TableType             { SelectAllWhere $4 $5 }
-               | Select List(ColumnRef) Where List(Predicate(ColumnComparison)) TableType { SelectColWhere $2 $4 $5 }
+SelectFunction : Select '*' From TableType                                                     { SelectAll $4 }
+               | Select List(ColumnRef) From TableType                                         { SelectCol $2 $4 }
+               | Select '*' Where List(Predicate(ColumnComparison)) From TableType             { SelectAllWhere $4 $6 }
+               | Select List(ColumnRef) Where List(Predicate(ColumnComparison)) From TableType { SelectColWhere $2 $4 $6 }
 
 -- INSERT -- 
 
-InsertFunction : Insert Values List(Str) TableType { InsertValues $3 $4 }
-               | Insert Column ColumnRef TableType { InsertColumn $3 $4 }
+InsertFunction : Insert Values List(Str) Into TableType { InsertValues $3 $5 }
+               | Insert Column ColumnRef Into TableType { InsertColumn $3 $5 }
 
 -- DELETE -- 
 
-DeleteFunction : Delete TableType                                         { DeleteAll $2}
-               | Delete List(ColumnRef) TableType                         { DeleteCol $2 $3 }
-               | Delete Where List(Predicate(ColumnComparison)) TableType { DeleteAllWhere $3 $4 }
+DeleteFunction : Delete TableType                                              { DeleteAll $2}
+               | Delete List(ColumnRef) From TableType                         { DeleteCol $2 $4 }
+               | Delete Where List(Predicate(ColumnComparison)) From TableType { DeleteAllWhere $3 $5 }
 
 -- UPDATE -- 
 
-UpdateFunction : Update List(Assignment) TableType                                         { UpdateAll $2 $3 }
-               | Update List(Assignment) Where List(Predicate(ColumnComparison)) TableType { UpdateWhere $2 $4 $5 }
+UpdateFunction : Update To List(Assignment) On TableType                                         { UpdateAll $3 $5 }
+               | Update To List(Assignment) Where List(Predicate(ColumnComparison)) On TableType { UpdateWhere $3 $5 $7 }
 
 -- SETS -- 
 
-SetFunction : Union TableType TableType        { Union $2 $3 }
-            | Intersection TableType TableType { Intersection $2 $3 }
-            | Difference TableType TableType   { Difference $2 $3 }
+SetFunction : Union TableType And TableType        { Union $2 $4 }
+            | Intersection TableType And TableType { Intersection $2 $4 }
+            | Difference TableType And TableType   { Difference $2 $4 }
 
 -- JOIN --
 
-JoinFunction : Join TableType TableType                                           { JoinStandard $2 $3 }
-             | Join Inner On List(Predicate(TableComparison)) TableType TableType { JoinInner $4 $5 $6 }
-             | Join Left On List(Predicate(TableComparison))  TableType TableType { JoinLeft $4 $5 $6 }
-             | Join Right On List(Predicate(TableComparison)) TableType TableType { JoinRight $4 $5 $6 }
-             | Join Outer On List(Predicate(TableComparison)) TableType TableType { JoinOuter $4 $5 $6 }
-             | Join Full TableType TableType                                      { JoinFull $3 $4 }
+JoinFunction : Join On TableType And TableType                                              { JoinStandard $3 $5 }
+             | Join Inner Where List(Predicate(TableComparison)) On TableType And TableType { JoinInner $4 $6 $8 }
+             | Join Left  Where List(Predicate(TableComparison)) On TableType And TableType { JoinLeft $4 $6 $8 }
+             | Join Right Where List(Predicate(TableComparison)) On TableType And TableType { JoinRight $4 $6 $8 }
+             | Join Outer Where List(Predicate(TableComparison)) On TableType And TableType { JoinOuter $4 $6 $8 }
+             | Join Full On TableType And TableType                                         { JoinFull $4 $6 }
 
 -- FORMAT -- 
 
-FormatFunction: Order By Direction TableType                 { OrderBy $3 $4 }
-              | Order By List(ColumnRef) Direction TableType { OrderByCol $3 $4 $5 }
-              | Limit int TableType                          { Limit $2 $3 }
-              | Offset int TableType                         { Offset $2 $3 }
-              | Last int TableType                           { Last $2 $3 }
-              | Unique TableType                             { Unique $2 }
-              | Transpose TableType                          { Transpose $2 }
+FormatFunction: Order In Direction TableType                    { OrderBy $3 $4 }
+              | Order In Direction By List(ColumnRef) TableType { OrderByCol $3 $5 $6 }
+              | Limit int TableType                             { Limit $2 $3 }
+              | Offset int TableType                            { Offset $2 $3 }
+              | Last int TableType                              { Last $2 $3 }
+              | Unique TableType                                { Unique $2 }
+              | Transpose TableType                             { Transpose $2 }
 
 Direction : Asc  { Asc }
           | Desc { Desc }
@@ -361,7 +365,7 @@ data JoinFunction = JoinStandard TableType TableType
                     deriving (Show, Eq)
 
 data FormatFunction = OrderBy Direction TableType
-                    | OrderByCol [Int] Direction TableType
+                    | OrderByCol Direction [Int] TableType
                     | Limit Int TableType
                     | Offset Int TableType
                     | Last Int TableType

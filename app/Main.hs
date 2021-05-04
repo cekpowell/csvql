@@ -799,9 +799,9 @@ getTableFromFormat (OrderBy direction tableType) vars         =  do
                                                                     table <- getTableFromType tableType vars
                                                                     let orderTable = getTableFromOrder direction table 
                                                                     return orderTable
-getTableFromFormat (OrderByCol cols direction tableType) vars = do 
+getTableFromFormat (OrderByCol direction cols tableType) vars = do 
                                                                     table <- getTableFromType tableType vars
-                                                                    let orderTable = getTableFromOrderCol cols direction table
+                                                                    let orderTable = getTableFromOrderCol direction cols table
                                                                     return orderTable
 getTableFromFormat (Limit limit tableType) vars               = do
                                                                     table <- getTableFromType tableType vars
@@ -840,14 +840,14 @@ getTableFromOrder Desc table = reverse (sort table)
         -- @brief:
         -- @params: 
         -- @return:
-getTableFromOrderCol :: [Int] -> Direction -> Table -> Table
-getTableFromOrderCol [] dir table | dir == Asc  = sort table
+getTableFromOrderCol :: Direction -> [Int] -> Table -> Table
+getTableFromOrderCol dir [] table | dir == Asc  = sort table
                                   | dir == Desc = reverse (sort table)
-getTableFromOrderCol (col:cols) dir table       = getTableFromSortedCol col sortedCol sortedTable
+getTableFromOrderCol dir (col:cols) table       = getTableFromSortedCol col sortedCol sortedTable
         where
                 sortedCol | dir == Asc  = sort((transpose table )!!col)
                           | dir == Desc = reverse (sort((transpose table )!!col))
-                sortedTable             = getTableFromOrderCol cols dir table
+                sortedTable             = getTableFromOrderCol dir cols table
 
 -- getTableFromSortedCol
         -- @brief:

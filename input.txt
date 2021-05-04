@@ -3,8 +3,9 @@ SETUP {
 }
 
 LET a = READ "A.CSV";
+LET b = READ "B.CSV";
 
-RETURN a;
+RETURN JOIN FULL a b;
 
 
 -- ==================================== --
