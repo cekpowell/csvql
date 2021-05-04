@@ -1,11 +1,7 @@
-SETUP {
-    PRETTYPRINT
-}
-
 LET a = READ "A.CSV";
 LET b = READ "B.CSV";
 
-RETURN JOIN FULL a b;
+RETURN JOIN FULL ON a AND b;
 
 
 -- ==================================== --

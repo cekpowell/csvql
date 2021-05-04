@@ -1100,14 +1100,15 @@ noLex e = do
         -- @return:
 prettyPrint :: String -> Table -> IO ()
 prettyPrint filename result = do
-                                 putStrLn("\n")
-                                 putStrLn("Running program : " ++ filename)
-                                 putStrLn("\n")
+                                 hPutStrLn stdout ("\n")
+                                 hPutStrLn stdout ("Running program : " ++ filename)
+                                 hPutStrLn stdout ("\n")
 
-                                 putStrLn("Program output : ")
-                                 putStrLn("\n")
+                                 hPutStrLn stdout ("Program output : ")
+                                 hPutStrLn stdout ("\n")
                                  prettyPrintTable result
-                                 putStrLn("\n")
+                                 hPutStrLn stdout ("\n")
+
 
 --------------------
 -- PRINTING TABLE --
@@ -1121,7 +1122,7 @@ printTable :: Table -> IO ()
 printTable [] = return ()
 printTable (r:rs) = do 
                        printRow r
-                       putStrLn ""
+                       hPutStrLn stdout ""
                        printTable rs 
 
 ------------------
@@ -1135,11 +1136,11 @@ printTable (r:rs) = do
 printRow :: Row -> IO ()
 printRow [] = return ()
 printRow (cell:cells) | cells == [] = do 
-                                         putStr cell
+                                         hPutStr stdout cell
                                          printRow cells
                       | otherwise   = do 
-                                         putStr cell
-                                         putStr ","
+                                         hPutStr stdout cell
+                                         hPutStr stdout ","
                                          printRow cells
 
 -- printLines
@@ -1149,7 +1150,7 @@ printRow (cell:cells) | cells == [] = do
 printLines :: [String] -> IO ()
 printLines [] = return ()
 printLines (l:ls) = do 
-                       putStrLn l
+                       hPutStrLn stdout l
                        printLines ls
 
 -- ============================== -- 
@@ -1182,7 +1183,7 @@ prettyPrintTableAux [] widths = return ()
 prettyPrintTableAux (row:rows) widths = do 
                                            prettyPrintRow row widths 0 -- 0 is the index of the current column, which starts at 0
 
-                                           putStrLn ("\t" ++ hSeperator)
+                                           hPutStrLn stdout ("\t" ++ hSeperator)
 
                                            prettyPrintTableAux rows widths
         where   
@@ -1202,15 +1203,15 @@ prettyPrintTableAux (row:rows) widths = do
         -- @return:
 prettyPrintRow :: Row -> [Int] -> Int -> IO ()
 prettyPrintRow (cell:cells) widths currentCol | cells == []     = do 
-                                                                     putStr " | "
+                                                                     hPutStr stdout " | "
                                                                      prettyPrintCell cell (widths!!currentCol)
-                                                                     putStrLn " | " -- printing seperator onto a new line as this is the final cell
+                                                                     hPutStrLn stdout " | " -- printing seperator onto a new line as this is the final cell
                                               | currentCol == 0 = do 
-                                                                     putStr "\t" -- first cell is the row label, so need to tab and not provide seperator
+                                                                     hPutStr stdout "\t" -- first cell is the row label, so need to tab and not provide seperator
                                                                      prettyPrintCell cell (widths!!currentCol)
                                                                      prettyPrintRow cells widths (currentCol + 1)
                                               | otherwise       = do 
-                                                                     putStr " | "
+                                                                     hPutStr stdout " | "
                                                                      prettyPrintCell cell (widths!!currentCol)
                                                                      prettyPrintRow cells widths (currentCol + 1)
 
@@ -1223,8 +1224,8 @@ prettyPrintRow (cell:cells) widths currentCol | cells == []     = do
         -- @params: 
         -- @return:
 prettyPrintCell :: String -> Int -> IO ()
-prettyPrintCell cell width | length cell < width = putStr formattedCell
-                           | otherwise           = putStr cell
+prettyPrintCell cell width | length cell < width = hPutStr stdout formattedCell
+                           | otherwise           = hPutStr stdout cell
         where
                 formattedCell = concat (cell : extraSpaces)
                 extraSpaces   = replicate (neededSpaces) " "
