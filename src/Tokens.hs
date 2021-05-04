@@ -527,21 +527,21 @@ alex_base = listArray (0 :: Int, 221)
   , 5852
   , 5927
   , 6002
+  , 0
+  , 0
+  , 0
+  , 0
   , -49
   , 0
-  , -48
+  , -32
+  , 0
+  , 0
+  , 0
+  , 0
   , -47
+  , -46
   , 0
   , 0
-  , 0
-  , 0
-  , 0
-  , 0
-  , 0
-  , 0
-  , 0
-  , 0
-  , -30
   , 0
   , 0
   , 0
@@ -683,16 +683,16 @@ alex_table = listArray (0 :: Int, 15332)
   , 34
   , 34
   , 34
-  , 82
+  , 91
   , 34
   , 34
   , 34
   , 34
   , 34
-  , 77
-  , 80
-  , 81
+  , 86
   , 36
+  , 89
+  , 90
   , 0
   , 0
   , 0
@@ -706,34 +706,34 @@ alex_table = listArray (0 :: Int, 15332)
   , 26
   , 0
   , 0
-  , 92
+  , 85
   , 34
   , 0
-  , 94
-  , 95
-  , 88
-  , 89
-  , 86
-  , 90
-  , 87
-  , 91
-  , 98
-  , 98
-  , 98
-  , 98
-  , 98
-  , 98
-  , 98
-  , 98
-  , 98
-  , 98
-  , 0
-  , 83
-  , 78
-  , 76
-  , 79
-  , 0
+  , 92
   , 93
+  , 83
+  , 81
+  , 77
+  , 82
+  , 78
+  , 84
+  , 98
+  , 98
+  , 98
+  , 98
+  , 98
+  , 98
+  , 98
+  , 98
+  , 98
+  , 98
+  , 0
+  , 76
+  , 87
+  , 80
+  , 88
+  , 0
+  , 79
   , 190
   , 106
   , 153
@@ -760,9 +760,9 @@ alex_table = listArray (0 :: Int, 15332)
   , 163
   , 163
   , 163
-  , 84
+  , 94
   , 38
-  , 85
+  , 95
   , 5
   , 0
   , 0
@@ -16027,9 +16027,9 @@ alex_check = listArray (0 :: Int, 15332)
   , 12
   , 13
   , 61
-  , 61
-  , 61
   , 45
+  , 61
+  , 61
   , -1
   , -1
   , -1
@@ -31986,23 +31986,37 @@ alex_actions = array (0 :: Int, 183)
   , (0,alex_action_65)
   ]
 
-{-# LINE 79 "Tokens.x" #-}
+{-# LINE 143 "Tokens.x" #-}
  
--- Each action has type :: String -> Token 
--- The token type: 
-data Token =    TokenSetup AlexPosn
+data Token = 
+                -----------------
+                -- EXPRESSIONS --
+                -----------------
+                TokenSetup AlexPosn
               | TokenPrettyPrint AlexPosn
               | TokenRead AlexPosn 
               | TokenLet AlexPosn
               | TokenReturn AlexPosn
 
+                ---------------
+                -- FUNCTIONS --
+                ---------------
+
+                -- SELECT -- 
+
               | TokenSelect AlexPosn
+
+                -- INSERT -- 
 
               | TokenInsert AlexPosn
               | TokenValues AlexPosn
               | TokenColumn AlexPosn
 
+                -- DELETE --
+
               | TokenDelete AlexPosn
+
+                -- WHERE -- 
 
               | TokenWhere AlexPosn
               | TokenNot AlexPosn
@@ -32010,13 +32024,19 @@ data Token =    TokenSetup AlexPosn
               | TokenOr AlexPosn 
               | TokenIndex AlexPosn
 
-              | TokenUpdate AlexPosn
-              | TokenSet AlexPosn
+                -- UPDATE -- 
 
+              | TokenUpdate AlexPosn
+
+                -- SET OPERATIONS -- 
+
+              | TokenSet AlexPosn
               | TokenUnion AlexPosn
               | TokenAll AlexPosn
               | TokenIntersection AlexPosn
               | TokenDifference AlexPosn
+
+                -- JOIN --
 
               | TokenJoin AlexPosn
               | TokenInner AlexPosn
@@ -32025,6 +32045,8 @@ data Token =    TokenSetup AlexPosn
               | TokenOuter AlexPosn
               | TokenFull AlexPosn
               | TokenOn AlexPosn
+
+                -- FORMAT -- 
 
               | TokenOrder AlexPosn
               | TokenBy AlexPosn
@@ -32036,7 +32058,29 @@ data Token =    TokenSetup AlexPosn
               | TokenUnique AlexPosn
               | TokenTranspose AlexPosn
 
+                ---------------------
+                -- SPECIAL SYMBOLS -- 
+                ---------------------
+
+              | TokenSep AlexPosn
+              | TokenComma AlexPosn
+              | TokenDot AlexPosn
+              | TokenAt AlexPosn
               | TokenAssign AlexPosn
+
+                ---------------------
+                -- MATHS OPERATORS --
+                ---------------------
+
+              | TokenAdd AlexPosn
+              | TokenSubtract AlexPosn
+              | TokenAst AlexPosn
+              | TokenDivide AlexPosn
+              | TokenModulo AlexPosn
+
+                --------------------------
+                -- COMPARISON OPERATORS --
+                -------------------------- 
 
               | TokenEq AlexPosn
               | TokenLessThan AlexPosn
@@ -32045,21 +32089,20 @@ data Token =    TokenSetup AlexPosn
               | TokenGreaterThanEq AlexPosn
               | TokenNotEq AlexPosn
 
-              | TokenSep AlexPosn
-              | TokenLSquare AlexPosn
-              | TokenRSquare AlexPosn
-              | TokenComma AlexPosn
-              | TokenDot AlexPosn
-              | TokenAst AlexPosn
-              | TokenAdd AlexPosn
-              | TokenSubtract AlexPosn
-              | TokenDivide AlexPosn
-              | TokenModulo AlexPosn
-              | TokenAt AlexPosn
+                -----------------
+                -- PARENTHESIS --
+                -----------------
+
               | TokenLParen AlexPosn
               | TokenRParen AlexPosn
+              | TokenLParenSquare AlexPosn
+              | TokenRParenSquare AlexPosn
               | TokenLParenCurly AlexPosn
               | TokenRParenCurly AlexPosn
+
+                --------------
+                -- PATTERNS --
+                --------------
 
               | TokenInt AlexPosn Int
               | TokenFilename AlexPosn String
@@ -32067,15 +32110,33 @@ data Token =    TokenSetup AlexPosn
               | TokenVar AlexPosn String
                 deriving (Eq,Show) 
 
+
+
+
+-- ================================================================================ --
+-- ================================================================================ --
+-- ================================ TOKEN POSITION ================================ --
+-- ================================================================================ --
+-- ================================================================================ --
+
+
+
+
 tokenPosn :: Token -> String
+
+-----------------
+-- EXPRESSIONS --
+-----------------
 
 tokenPosn (TokenSetup (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenPrettyPrint (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
-
 tokenPosn (TokenRead (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
-
 tokenPosn (TokenLet (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenReturn (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+
+---------------
+-- FUNCTIONS --
+---------------
 
 tokenPosn (TokenSelect (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 
@@ -32117,7 +32178,28 @@ tokenPosn (TokenLast (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenUnique (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenTranspose (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 
+---------------------
+-- SPECIAL SYMBOLS -- 
+---------------------
+
+tokenPosn (TokenSep (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenComma (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenDot (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenAt (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAssign (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+
+---------------------
+-- MATHS OPERATORS --
+---------------------
+
+tokenPosn (TokenAdd (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenSubtract (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenAst (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenDivide (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+
+--------------------------
+-- COMPARISON OPERATORS --
+-------------------------- 
 
 tokenPosn (TokenEq (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLessThan (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
@@ -32126,21 +32208,21 @@ tokenPosn (TokenLessThanEq (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenGreaterThanEq (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenNotEq (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 
-tokenPosn (TokenSep (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
-tokenPosn (TokenLSquare (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
-tokenPosn (TokenRSquare (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
-tokenPosn (TokenComma (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
-tokenPosn (TokenDot (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
-tokenPosn (TokenAst (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
-tokenPosn (TokenAt (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
-tokenPosn (TokenAdd (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
-tokenPosn (TokenSubtract (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
-tokenPosn (TokenDivide (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+-----------------
+-- PARENTHESIS --
+-----------------
+
 tokenPosn (TokenModulo (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLParen (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenRParen (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenLParenSquare (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenRParenSquare (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLParenCurly (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenRParenCurly (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+
+--------------
+-- PATTERNS --
+--------------
 
 tokenPosn (TokenInt (AlexPn a l c) _) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenFilename (AlexPn a l c) _) = show(l) ++ ":" ++ show(c)
@@ -32185,26 +32267,26 @@ alex_action_36 =  \p s -> TokenOffset p
 alex_action_37 =  \p s -> TokenLast p 
 alex_action_38 =  \p s -> TokenUnique p 
 alex_action_39 =  \p s -> TokenTranspose p 
-alex_action_40 =  \p s -> TokenAssign p 
-alex_action_41 =  \p s -> TokenEq p 
-alex_action_42 =  \p s -> TokenLessThan p 
-alex_action_43 =  \p s -> TokenGreaterThan p 
-alex_action_44 =  \p s -> TokenLessThanEq p 
-alex_action_45 =  \p s -> TokenGreaterThanEq p 
-alex_action_46 =  \p s -> TokenNotEq p 
-alex_action_47 =  \p s -> TokenSep p 
-alex_action_48 =  \p s -> TokenLSquare p 
-alex_action_49 =  \p s -> TokenRSquare p 
-alex_action_50 =  \p s -> TokenComma p 
-alex_action_51 =  \p s -> TokenDot p 
-alex_action_52 =  \p s -> TokenAst p 
-alex_action_53 =  \p s -> TokenAdd p 
-alex_action_54 =  \p s -> TokenSubtract p 
-alex_action_55 =  \p s -> TokenDivide p 
-alex_action_56 =  \p s -> TokenModulo p 
-alex_action_57 =  \p s -> TokenAt p 
-alex_action_58 =  \p s -> TokenLParen p 
-alex_action_59 =  \p s -> TokenRParen p 
+alex_action_40 =  \p s -> TokenSep p 
+alex_action_41 =  \p s -> TokenComma p 
+alex_action_42 =  \p s -> TokenDot p 
+alex_action_43 =  \p s -> TokenAt p 
+alex_action_44 =  \p s -> TokenAssign p 
+alex_action_45 =  \p s -> TokenAdd p 
+alex_action_46 =  \p s -> TokenSubtract p 
+alex_action_47 =  \p s -> TokenAst p 
+alex_action_48 =  \p s -> TokenDivide p 
+alex_action_49 =  \p s -> TokenModulo p 
+alex_action_50 =  \p s -> TokenEq p 
+alex_action_51 =  \p s -> TokenLessThan p 
+alex_action_52 =  \p s -> TokenGreaterThan p 
+alex_action_53 =  \p s -> TokenLessThanEq p 
+alex_action_54 =  \p s -> TokenGreaterThanEq p 
+alex_action_55 =  \p s -> TokenNotEq p 
+alex_action_56 =  \p s -> TokenLParen p 
+alex_action_57 =  \p s -> TokenRParen p 
+alex_action_58 =  \p s -> TokenLParenSquare p 
+alex_action_59 =  \p s -> TokenRParenSquare p 
 alex_action_60 =  \p s -> TokenLParenCurly p 
 alex_action_61 =   \p s -> TokenRParenCurly p 
 alex_action_62 =  \p s -> TokenInt p (read s)
