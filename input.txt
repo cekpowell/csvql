@@ -1,6 +1,10 @@
+SETUP {
+    PRETTYPRINT
+}
+
 LET a = READ "A.CSV";
 
-RETURN SELECT * WHERE [INDEX % 2 == 1] a;
+RETURN a;
 
 
 -- ==================================== --

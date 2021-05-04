@@ -11,7 +11,6 @@ import System.Environment
 import Control.Exception
 import System.IO
 import Data.List
-import Data.List.Split
 import Data.Char (isSpace) 
 
 -- ADDITIONAL DEPENDENCIES 
@@ -39,60 +38,67 @@ type Vars = [Var]
 -- ================================================================================ --
 -- ================================================================================ --
 
+
+
+
 -- main
         -- @brief:
         -- @params: 
         -- @return:
 main :: IO ()
-main = catch mainPrettyPrint noLex 
+main = catch mainAux noLex 
 
 -- mainAux
         -- @brief:
         -- @params: 
         -- @return:
+mainAux :: IO ()
 mainAux = do
         (filename : _ ) <- getArgs
         sourceText <- readFile filename
         
         let tokens = alexScanTokens sourceText
-        --putStrLn ("Lexed as : " ++ (show tokens))
-        let exp = parseCalc tokens
-        --putStrLn ("Parsed as : " ++ (show exp))
+        let program = parseCalc tokens
+
+        let configuration = getConfiguration program
+        let exp = getExp program
 
         result <- eval exp []
-        printTable result
 
--- mainPrettyPrint 
+        if (contains PrettyPrint configuration) 
+                then prettyPrint filename result
+        else printTable result
+
+-- getConfiguration 
         -- @brief:
         -- @params: 
         -- @return:
-mainPrettyPrint = do
-                        (filename : _ ) <- getArgs
-                        putStrLn("\n")
-                        putStrLn("Running program : " ++ filename)
-                        putStrLn("\n")
-                        sourceText <- readFile filename
+getConfiguration :: Program -> [Configuration]
+getConfiguration (SetupProgram configuration exp) = configuration
+getConfiguration (Program exp)                    = []
 
-                        -- putStrLn("Program : ")
-                        -- putStrLn("\n")
-                        -- putStrLn(sourceText)
-                        -- putStrLn("\n")
-                        
-                        let tokens = alexScanTokens sourceText
-                        --putStrLn("\n")
-                        --putStrLn ("Lexed as : " ++ (show tokens))
-                        --putStrLn("\n")
-                        let exp = parseCalc tokens
-                        --putStrLn("\n")
-                        --putStrLn ("Parsed as : " ++ (show exp))
-                        --putStrLn("\n")
+-- getExp 
+        -- @brief:
+        -- @params: 
+        -- @return:
+getExp :: Program -> Exp
+getExp (SetupProgram configuration exp) = exp
+getExp (Program exp)                    = exp
 
-                        result <- eval exp []
+-- prettyPrint 
+        -- @brief:
+        -- @params: 
+        -- @return:
+prettyPrint :: String -> Table -> IO ()
+prettyPrint filename result = do
+                                putStrLn("\n")
+                                putStrLn("Running program : " ++ filename)
+                                putStrLn("\n")
 
-                        putStrLn("Program output : ")
-                        putStrLn("\n")
-                        prettyPrintTable result
-                        putStrLn("\n")
+                                putStrLn("Program output : ")
+                                putStrLn("\n")
+                                prettyPrintTable result
+                                putStrLn("\n")
 
 
 ---------------
@@ -992,7 +998,15 @@ getTableFromLines :: [String] -> Table
 getTableFromLines [] = []
 getTableFromLines (row:rows) = cells : (getTableFromLines rows)
         where
-                cells = splitOn "," row
+                cells = splitOn ',' row
+
+splitOn :: Char -> String -> [String]
+splitOn  target input = splitOnAux target input []
+
+splitOnAux :: Char -> String -> String -> [String]
+splitOnAux target [] current           = [current]
+splitOnAux target (char:chars) current | char == target = current : splitOnAux target chars []
+                                       | otherwise      = splitOnAux target chars (current ++ [char])
 
 -- getCellFromTable
         -- @brief:
@@ -1083,16 +1097,32 @@ noLex e = do
 -- ================================================================================ --
 
 
-------------------
--- NORMAL PRINT -- 
-------------------
+-- ============================== -- 
+-- ======== NORMAL PRINT ======== -- 
+-- ============================== -- 
 
+--------------------
+-- PRINTING TABLE --
+--------------------
+
+-- printTable
+        -- @brief:
+        -- @params: 
+        -- @return:
 printTable :: Table -> IO ()
 printTable [] = return ()
 printTable (r:rs) = do printRow r
                        putStrLn ""
                        printTable rs 
 
+------------------
+-- PRINTING ROW --
+------------------
+
+-- printRow
+        -- @brief:
+        -- @params: 
+        -- @return:
 printRow :: Row -> IO ()
 printRow [] = return ()
 printRow (cell:cells) | cells == [] = do putStr cell
@@ -1101,26 +1131,124 @@ printRow (cell:cells) | cells == [] = do putStr cell
                                          putStr ","
                                          printRow cells
 
+-- printLines
+        -- @brief:
+        -- @params: 
+        -- @return:
 printLines :: [String] -> IO ()
 printLines [] = return ()
 printLines (l:ls) = do putStrLn l
                        printLines ls
 
-------------------
--- PRETTY PRINT -- 
-------------------
+-- ============================== -- 
+-- ======== PRETTY PRINT ======== -- 
+-- ============================== -- 
 
+--------------------
+-- PRINTING TABLE --
+--------------------
+
+-- prettyPrintTable
+        -- @brief:
+        -- @params: 
+        -- @return:
 prettyPrintTable :: Table -> IO ()
-prettyPrintTable [] = return ()
-prettyPrintTable (r:rs) = do putStr "\t"
-                             prettyPrintRow r
-                             putStrLn ""
-                             prettyPrintTable rs 
+prettyPrintTable []    = do prettyPrintTable [[""]] -- no table (empty file), so printing a one by one tabl
+prettyPrintTable table = do
+                                let rowLabelledTable = getRowLabelledTable table 0 -- 0 is the index of the current row, which starts at 0
+                                let columnLabels = getColumnLabels ((getTableWidth rowLabelledTable) - 2)
+                                let columnRowLabelledTable = ("" : columnLabels) : rowLabelledTable
+                                let widths = getColumnWidths (transpose columnRowLabelledTable)                                
 
-prettyPrintRow :: Row -> IO ()
-prettyPrintRow [] = return ()
-prettyPrintRow (cell:cells) | cells == [] = do putStr cell
-                                               prettyPrintRow cells
-                            | otherwise   = do putStr cell
-                                               putStr ", "
-                                               prettyPrintRow cells
+                                prettyPrintTableAux columnRowLabelledTable widths 
+
+-- prettyPrintTableAux
+        -- @brief:
+        -- @params: 
+        -- @return:
+prettyPrintTableAux :: Table -> [Int] -> IO ()
+prettyPrintTableAux [] widths = return ()
+prettyPrintTableAux (row:rows) widths = do prettyPrintRow row widths 0 -- 0 is the index of the current column, which starts at 0
+
+                                           putStrLn ("\t" ++ hSeperator)
+
+                                           prettyPrintTableAux rows widths
+        where   
+                hSeperator = concat (replicate neededAmount "-")
+                neededAmount = allWidths + vSeperators + vSeperatorSpaces
+                allWidths = sum widths                  -- width of every column
+                vSeperators = (length widths) - 1       -- the number of v seperators in the row (-1 as the row label does not have a v seperator on it's left-hand side)
+                vSeperatorSpaces = (length widths) * 2  -- the number of spaces around the v seperators
+
+------------------
+-- PRINTING ROW --
+------------------
+
+-- prettyPrintRow
+        -- @brief:
+        -- @params: 
+        -- @return:
+prettyPrintRow :: Row -> [Int] -> Int -> IO ()
+prettyPrintRow (cell:cells) widths currentCol | cells == []     = do putStr " | "
+                                                                     prettyPrintCell cell (widths!!currentCol)
+                                                                     putStrLn " | " -- printing seperator onto a new line as this is the final cell
+                                              | currentCol == 0 = do putStr "\t" -- first cell is the row label, so need to tab and not provide seperator
+                                                                     prettyPrintCell cell (widths!!currentCol)
+                                                                     prettyPrintRow cells widths (currentCol + 1)
+                                              | otherwise       = do putStr " | "
+                                                                     prettyPrintCell cell (widths!!currentCol)
+                                                                     prettyPrintRow cells widths (currentCol + 1)
+
+-------------------
+-- PRINTING CELL --
+-------------------
+
+-- prettyPrintCell
+        -- @brief:
+        -- @params: 
+        -- @return:
+prettyPrintCell :: String -> Int -> IO ()
+prettyPrintCell cell width | length cell < width = putStr formattedCell
+                           | otherwise           = putStr cell
+        where
+                formattedCell = concat (cell : extraSpaces)
+                extraSpaces   = replicate (neededSpaces) " "
+                neededSpaces  = width - (length cell)
+
+--------------------
+-- HELPER METHODS --
+--------------------
+
+-- getColumnWidths
+        -- @brief:
+        -- @params: 
+        -- @return:
+getColumnWidths :: Table -> [Int]
+getColumnWidths []         = []
+getColumnWidths (col:cols) = getColumnWidth col : getColumnWidths cols
+
+-- getColumnWidth
+        -- @brief:
+        -- @params: 
+        -- @return:
+getColumnWidth :: Column -> Int
+getColumnWidth []           = 0
+getColumnWidth (cell:cells) = max (length cell) (getColumnWidth cells)
+
+-- getColumnLabels
+        -- @brief:
+        -- @params: 
+        -- @return:                               
+getColumnLabels :: Int -> Row
+getColumnLabels 0     = ["C0"]
+getColumnLabels width = getColumnLabels (width-1) ++ [("C" ++ (show width))]
+
+-- getRowLabelledTable
+        -- @brief:
+        -- @params: 
+        -- @return:
+getRowLabelledTable :: Table -> Int -> Table
+getRowLabelledTable [] index         = []
+getRowLabelledTable (row:rows) index = labelledRow : getRowLabelledTable rows (index + 1)
+        where
+                labelledRow = ("R" ++ (show index)) : row

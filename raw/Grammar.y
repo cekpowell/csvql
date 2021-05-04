@@ -7,6 +7,8 @@ import Tokens
 %tokentype { Token } 
 %error { parseError }
 %token 
+    Setup        { TokenSetup _ }
+    PrettyPrint  { TokenPrettyPrint _ }
     Read         { TokenRead _ } 
     Let          { TokenLet _ }
     Return       { TokenReturn _ }
@@ -62,6 +64,8 @@ import Tokens
     "@"          { TokenAt _ } 
     '('          { TokenLParen _ }
     ')'          { TokenRParen _ }
+    '{'          { TokenLParenCurly _ }
+    '}'          { TokenRParenCurly _ }
     int          { TokenInt  _ $$ }
     Filename     { TokenFilename _ $$ }
     Str          { TokenStr _ $$ }
@@ -69,8 +73,13 @@ import Tokens
 
 
 %% 
+Program : Setup CurlyList(Configuration) Exp { SetupProgram $2 $3}
+        | Exp                                { Program $1 }
+
+Configuration : PrettyPrint { PrettyPrint }
+
 Exp : Let Var '=' TableType ';' Exp { Let $2 $4 $6 }
-    | Return TableType ';'          { Return $2 }
+    | Return TableType ';'            { Return $2 }
   
 TableType : Read Filename     { Read $2 }
           | Var               { Var $1 }
@@ -124,13 +133,18 @@ List (a)     : '[' ']'              { [] }
 ListCont (a) : a                    { [$1] }
              | a ',' ListCont (a)   { [$1] ++ $3 }
 
+CurlyList (a)     : '{' '}'                   { [] }
+                  | '{' CurlyListCont (a) '}' { $2 }
+CurlyListCont (a) : a                         { [$1] }
+                  | a ',' CurlyListCont (a)   { [$1] ++ $3 }
+
 Predicate (a) : Not Predicate (a)               { Not $2 }
               | Predicate (a) And Predicate (a) { And $1 $3 }
               | Predicate (a) Or Predicate (a)  { Or $1 $3  }
               | a                               { Comparison $1 }
 
-ColumnComparison : ColumnRef ComparisonOperator Str              { ColVal $1 $2 $3 }
-                 | ColumnRef ComparisonOperator ColumnRef        { ColCol $1 $2 $3 }
+ColumnComparison : ColumnRef ComparisonOperator Str          { ColVal $1 $2 $3 }
+                 | ColumnRef ComparisonOperator ColumnRef    { ColCol $1 $2 $3 }
                  | Index Operator int ComparisonOperator int { IndexVal $2 $3 $4 $5 }
 
 ColumnRef : "@" int { $2 }
@@ -161,6 +175,13 @@ Direction : Asc  { Asc }
 parseError :: [Token] -> a
 parseError [] = error "Unknown parse error"
 parseError (t:ts) = error ("Error at line:column  " ++ (tokenPosn t))
+
+data Program = SetupProgram [Configuration] Exp
+             | Program Exp
+               deriving (Show, Eq)
+
+data Configuration = PrettyPrint
+                     deriving (Show, Eq)
 
 data Exp = Let String TableType Exp
          | Return TableType

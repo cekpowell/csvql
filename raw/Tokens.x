@@ -12,6 +12,8 @@ tokens :-
 $white+              ; 
   "--".*             ; 
   "--/" [.\n]* "/--" ;
+  SETUP         { \p s -> TokenSetup p }
+  PRETTYPRINT   { \p s -> TokenPrettyPrint p }
   READ          { \p s -> TokenRead p } 
   LET           { \p s -> TokenLet p }
   RETURN        { \p s -> TokenReturn p }
@@ -67,6 +69,8 @@ $white+              ;
   "@"           { \p s -> TokenAt p } 
   "("           { \p s -> TokenLParen p }
   ")"           { \p s -> TokenRParen p }
+  "{"           { \p s -> TokenLParenCurly p }
+  "}"          {  \p s -> TokenRParenCurly p }
   [$digit]+     { \p s -> TokenInt p (read s)}
   \"[$alpha $white \_ \' $digit]* \. [$alpha $white \_ \' $digit]*\" { \p s -> TokenFilename p (read s) }
   \"[$alpha $white \_ \' $digit]*\"                                  { \p s -> TokenStr p (read s) }
@@ -75,7 +79,9 @@ $white+              ;
 { 
 -- Each action has type :: String -> Token 
 -- The token type: 
-data Token = TokenRead AlexPosn 
+data Token =    TokenSetup AlexPosn
+              | TokenPrettyPrint AlexPosn
+              | TokenRead AlexPosn 
               | TokenLet AlexPosn
               | TokenReturn AlexPosn
 
@@ -141,6 +147,8 @@ data Token = TokenRead AlexPosn
               | TokenAt AlexPosn
               | TokenLParen AlexPosn
               | TokenRParen AlexPosn
+              | TokenLParenCurly AlexPosn
+              | TokenRParenCurly AlexPosn
 
               | TokenInt AlexPosn Int
               | TokenFilename AlexPosn String
@@ -149,6 +157,10 @@ data Token = TokenRead AlexPosn
                 deriving (Eq,Show) 
 
 tokenPosn :: Token -> String
+
+tokenPosn (TokenSetup (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenPrettyPrint (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+
 tokenPosn (TokenRead (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 
 tokenPosn (TokenLet (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
@@ -216,6 +228,8 @@ tokenPosn (TokenDivide (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenModulo (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLParen (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenRParen (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenLParenCurly (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenRParenCurly (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 
 tokenPosn (TokenInt (AlexPn a l c) _) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenFilename (AlexPn a l c) _) = show(l) ++ ":" ++ show(c)
