@@ -465,6 +465,7 @@ evalOperatorExpression val1 Modulo val2 = mod val1 val2
 -- ============ SETS ============ -- 
 -- ============================== -- 
 
+
 -----------------
 -- MAIN METHOD -- 
 -----------------
@@ -922,6 +923,7 @@ getTableFromUnique table = nub table
         -- @return:
 getTableFromTranspose :: Table -> Table
 getTableFromTranspose table = transpose table
+
 
 
 

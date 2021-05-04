@@ -128,8 +128,13 @@ import Tokens
 -- ================================================================================ --
 
 
+-------------------------
+-- OPERATOR PRECEDENCE --
+------------------------- 
 
-
+%nonassoc Not
+%nonassoc And
+%nonassoc Or
 %% 
 
 -----------------
@@ -238,14 +243,17 @@ CurlyListCont (a) : a                         { [$1] }
 -- PREDICATES --
 ----------------
 
-Predicate (a) : Not Predicate (a)               { Not $2 }
-              | Predicate (a) And Predicate (a) { And $1 $3 }
-              | Predicate (a) Or Predicate (a)  { Or $1 $3  }
-              | a                               { Comparison $1 }
+Predicate (a) : Not Predicate(a)              { Not $2 }
+              | Predicate(a) And Predicate(a) { And $1 $3 }
+              | Predicate(a) Or Predicate(a)  { Or $1 $3  }
+              | a                             { Comparison $1 }
+              | '(' Predicate(a) ')'          { $2 }
 
 ColumnComparison : ColumnRef ComparisonOperator Str          { ColVal $1 $2 $3 }
                  | ColumnRef ComparisonOperator ColumnRef    { ColCol $1 $2 $3 }
                  | Index Operator int ComparisonOperator int { IndexVal $2 $3 $4 $5 }
+
+TableComparison : Left '.' ColumnRef ComparisonOperator Right '.' ColumnRef { TableComparison $3 $4 $7 }
 
 ComparisonOperator : "==" { Eq } 
                    | "<"  { LessThan }
@@ -259,8 +267,6 @@ ComparisonOperator : "==" { Eq }
 ------------------------ 
 
 ColumnRef : "@" int { $2 }
-
-TableComparison : Left '.' ColumnRef ComparisonOperator Right '.' ColumnRef { TableComparison $3 $4 $7 }
 
 TableColumnRef : Var '.' ColumnRef { TableColumnRef $1 $3 }
 
