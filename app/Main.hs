@@ -53,21 +53,21 @@ main = catch mainAux noLex
         -- @params: 
         -- @return:
 mainAux :: IO ()
-mainAux = do
-        (filename : _ ) <- getArgs
-        sourceText <- readFile filename
-        
-        let tokens = alexScanTokens sourceText
-        let program = parseCalc tokens
+mainAux = do 
+             (filename : _ ) <- getArgs
+             sourceText <- readFile filename
+                
+             let tokens = alexScanTokens sourceText
+             let program = parseCalc tokens
 
-        let configuration = getConfiguration program
-        let exp = getExp program
+             let configuration = getConfiguration program
+             let exp = getExp program
 
-        result <- eval exp []
+             result <- eval exp []
 
-        if (contains PrettyPrint configuration) 
-                then prettyPrint filename result
-        else printTable result
+             if (contains PrettyPrint configuration) 
+                     then prettyPrint filename result
+             else printTable result
 
 -- getConfiguration 
         -- @brief:
@@ -85,21 +85,6 @@ getExp :: Program -> Exp
 getExp (SetupProgram configuration exp) = exp
 getExp (Program exp)                    = exp
 
--- prettyPrint 
-        -- @brief:
-        -- @params: 
-        -- @return:
-prettyPrint :: String -> Table -> IO ()
-prettyPrint filename result = do
-                                putStrLn("\n")
-                                putStrLn("Running program : " ++ filename)
-                                putStrLn("\n")
-
-                                putStrLn("Program output : ")
-                                putStrLn("\n")
-                                prettyPrintTable result
-                                putStrLn("\n")
-
 
 ---------------
 -- EVALUATOR --
@@ -112,9 +97,9 @@ prettyPrint filename result = do
         -- @return:
 eval :: Exp -> Vars -> IO Table
 eval (Let varName tableType exp) vars  = do 
-                                                table <- getTableFromType tableType vars
-                                                let updatedVars = updateVars (varName, table) vars
-                                                eval exp updatedVars                                                       
+                                            table <- getTableFromType tableType vars
+                                            let updatedVars = updateVars (varName, table) vars
+                                            eval exp updatedVars                                                       
 eval (Return tableType) vars           = getTableFromType tableType vars
 
 
@@ -138,17 +123,17 @@ eval (Return tableType) vars           = getTableFromType tableType vars
         -- @return:
 getTableFromType :: TableType -> Vars -> IO Table
 getTableFromType (Read filename) vars           = do 
-                                                        table <- getTableFromFile filename
-                                                        let formattedTable = formatTable table
-                                                        return formattedTable              
+                                                     table <- getTableFromFile filename
+                                                     let formattedTable = formatTable table
+                                                     return formattedTable              
 getTableFromType (Var varName) vars             = do 
-                                                        let table = getTableFromVar varName vars
-                                                        let formattedTable = formatTable table
-                                                        return formattedTable
+                                                     let table = getTableFromVar varName vars
+                                                     let formattedTable = formatTable table
+                                                     return formattedTable
 getTableFromType (Function functionTable) vars  = do 
-                                                        table <- getTableFromFunction functionTable vars
-                                                        let formattedTable = formatTable table
-                                                        return formattedTable
+                                                     table <- getTableFromFunction functionTable vars
+                                                     let formattedTable = formatTable table
+                                                     return formattedTable
 
 ---------------------
 -- TABLE FROM FILE --
@@ -160,10 +145,10 @@ getTableFromType (Function functionTable) vars  = do
         -- @return:
 getTableFromFile :: String -> IO Table
 getTableFromFile filename = do 
-                                content <- readFile filename 
-                                let rows = lines content
-                                let table = getTableFromLines rows
-                                return table
+                               content <- readFile filename 
+                               let rows = lines content
+                               let table = getTableFromLines rows
+                               return table
 
 --------------------
 -- TABLE FROM VAR -- 
@@ -217,12 +202,12 @@ getTableFromFunction (Format formatFunction) vars = getTableFromFormat formatFun
         -- @params: 
         -- @return:
 getTableFromSelect :: SelectFunction -> Vars -> IO Table
-getTableFromSelect (SelectAll tableType) vars                 = (getTableFromType tableType vars)
-getTableFromSelect (SelectCol cols tableType) vars            = do
+getTableFromSelect (SelectAll tableType) vars                      = (getTableFromType tableType vars)
+getTableFromSelect (SelectCol cols tableType) vars                 = do 
                                                                         table <- getTableFromType tableType vars
                                                                         let tableCols = (selectTableCols cols table)
                                                                         return tableCols
-getTableFromSelect (SelectAllWhere predicates tableType) vars = do
+getTableFromSelect (SelectAllWhere predicates tableType) vars      = do 
                                                                         table <- getTableFromType tableType vars
                                                                         let whereTable = getTableFromWhere predicates table
                                                                         return whereTable
@@ -261,13 +246,13 @@ selectRowCols (col:cols) row   = [(row!!col)] ++ (selectRowCols cols row)
         -- @params: 
         -- @return:
 getTableFromInsert :: InsertFunction -> Vars -> IO Table
-getTableFromInsert (InsertValues vals tableType) vars   = do
-                                                                table <- getTableFromType tableType vars
-                                                                return (table ++ [vals])
-getTableFromInsert (InsertColumn colNum tableType) vars = do
-                                                                table <- getTableFromType tableType vars
-                                                                let insertTable = insertColumnTable colNum table
-                                                                return insertTable
+getTableFromInsert (InsertValues vals tableType) vars   = do 
+                                                             table <- getTableFromType tableType vars
+                                                             return (table ++ [vals])
+getTableFromInsert (InsertColumn colNum tableType) vars = do 
+                                                             table <- getTableFromType tableType vars
+                                                             let insertTable = insertColumnTable colNum table
+                                                             return insertTable
 
 -- insertColumnTable
         -- @brief:
@@ -299,15 +284,15 @@ insertColumnRow colNum (cell:cells) = cell : (insertColumnRow (colNum - 1) cells
         -- @return:
 getTableFromDelete :: DeleteFunction-> Vars -> IO Table
 getTableFromDelete (DeleteAll tableType) vars                 = return []
-getTableFromDelete (DeleteCol cols tableType) vars            = do
-                                                                table <- getTableFromType tableType vars
-                                                                let tableCols = deleteTableCols cols table 
-                                                                return tableCols
-getTableFromDelete (DeleteAllWhere predicates tableType) vars = do
-                                                                table <- getTableFromType tableType vars
-                                                                let whereTable = getTableFromWhere predicates table
-                                                                let deleteTable = table \\ whereTable
-                                                                return deleteTable
+getTableFromDelete (DeleteCol cols tableType) vars            = do 
+                                                                   table <- getTableFromType tableType vars
+                                                                   let tableCols = deleteTableCols cols table 
+                                                                   return tableCols
+getTableFromDelete (DeleteAllWhere predicates tableType) vars = do 
+                                                                   table <- getTableFromType tableType vars
+                                                                   let whereTable = getTableFromWhere predicates table
+                                                                   let deleteTable = table \\ whereTable
+                                                                   return deleteTable
 
 
 -- deleteTableCols
@@ -348,14 +333,14 @@ deleteRowCol col currentCol (cell:cells) | col == currentCol = cells
         -- @params: 
         -- @return:
 getTableFromUpdate :: UpdateFunction -> Vars -> IO Table
-getTableFromUpdate (UpdateAll assignments tableType) vars              = do
-                                                                        table <- getTableFromType tableType vars
-                                                                        let updateTable = getTableFromUpdateAll assignments table
-                                                                        return updateTable
-getTableFromUpdate (UpdateWhere assignments predicates tableType) vars = do
-                                                                        table <- getTableFromType tableType vars
-                                                                        let updateTable = getTableFromUpdateWhere assignments predicates table
-                                                                        return updateTable
+getTableFromUpdate (UpdateAll assignments tableType) vars              = do 
+                                                                            table <- getTableFromType tableType vars
+                                                                            let updateTable = getTableFromUpdateAll assignments table
+                                                                            return updateTable
+getTableFromUpdate (UpdateWhere assignments predicates tableType) vars = do 
+                                                                            table <- getTableFromType tableType vars
+                                                                            let updateTable = getTableFromUpdateWhere assignments predicates table
+                                                                            return updateTable
 
 -- getTableFromUpdateAll
         -- @brief:
@@ -386,8 +371,8 @@ getTableFromUpdateWhereAux assignments whereTable []                            
 getTableFromUpdateWhereAux assignments whereTable (row:rows) | contains row whereTable = updatedRow : restOfTable
                                                              | otherwise               = row : restOfTable
         where
-                updatedRow = getRowFromAssignments assignments row
-                restOfTable   = getTableFromUpdateWhereAux assignments whereTable rows
+                updatedRow  = getRowFromAssignments assignments row
+                restOfTable = getTableFromUpdateWhereAux assignments whereTable rows
 
 -- getRowFromAssignments
         -- @brief:
@@ -489,21 +474,21 @@ evalOperatorExpression val1 Modulo val2 = mod val1 val2
         -- @params: 
         -- @return:
 getTableFromSet :: SetFunction -> Vars -> IO Table
-getTableFromSet (Union tableType1 tableType2) vars        = do
-                                                                table1 <- getTableFromType tableType1 vars
-                                                                table2 <- getTableFromType tableType2 vars
-                                                                let unionTable = getTableFromUnion table1 table2
-                                                                return unionTable
-getTableFromSet (Intersection tableType1 tableType2) vars = do
-                                                                table1 <- getTableFromType tableType1 vars
-                                                                table2 <- getTableFromType tableType2 vars
-                                                                let intersectionTable = getTableFromIntersection table1 table2
-                                                                return intersectionTable
-getTableFromSet (Difference tableType1 tableType2) vars   = do
-                                                                table1 <- getTableFromType tableType1 vars
-                                                                table2 <- getTableFromType tableType2 vars
-                                                                let differenceTable = getTableFromDifference table1 table2
-                                                                return differenceTable
+getTableFromSet (Union tableType1 tableType2) vars        = do 
+                                                               table1 <- getTableFromType tableType1 vars
+                                                               table2 <- getTableFromType tableType2 vars
+                                                               let unionTable = getTableFromUnion table1 table2
+                                                               return unionTable
+getTableFromSet (Intersection tableType1 tableType2) vars = do 
+                                                               table1 <- getTableFromType tableType1 vars
+                                                               table2 <- getTableFromType tableType2 vars
+                                                               let intersectionTable = getTableFromIntersection table1 table2
+                                                               return intersectionTable
+getTableFromSet (Difference tableType1 tableType2) vars   = do 
+                                                               table1 <- getTableFromType tableType1 vars
+                                                               table2 <- getTableFromType tableType2 vars
+                                                               let differenceTable = getTableFromDifference table1 table2
+                                                               return differenceTable
 
 -----------
 -- UNION -- 
@@ -766,17 +751,17 @@ rowSatisfyTablePredicate (Comparison tableComparison) row1 row2  = rowSatisfyTab
         -- @return:
 rowSatisfyTableComparison :: TableComparison -> Row -> Row -> Bool
 rowSatisfyTableComparison (TableComparison col1 Eq col2) row1 row2            | (row1!!col1) == (row2!!col2) = True
-                                                                              | otherwise = False
-rowSatisfyTableComparison (TableComparison col1 LessThan col2) row1 row2      | (row1!!col1) < (row2!!col2) = True
-                                                                              | otherwise = False
-rowSatisfyTableComparison (TableComparison col1 GreaterThan col2) row1 row2   | (row1!!col1) > (row2!!col2) = True
-                                                                              | otherwise = False  
+                                                                              | otherwise                    = False
+rowSatisfyTableComparison (TableComparison col1 LessThan col2) row1 row2      | (row1!!col1) <  (row2!!col2) = True
+                                                                              | otherwise                    = False
+rowSatisfyTableComparison (TableComparison col1 GreaterThan col2) row1 row2   | (row1!!col1) >  (row2!!col2) = True
+                                                                              | otherwise                    = False  
 rowSatisfyTableComparison (TableComparison col1 LessThanEq col2) row1 row2    | (row1!!col1) <= (row2!!col2) = True
-                                                                              | otherwise = False
+                                                                              | otherwise                    = False
 rowSatisfyTableComparison (TableComparison col1 GreaterThanEq col2) row1 row2 | (row1!!col1) >= (row2!!col2) = True
-                                                                              | otherwise = False  
+                                                                              | otherwise                    = False  
 rowSatisfyTableComparison (TableComparison col1 NotEq col2) row1 row2         | (row1!!col1) /= (row2!!col2) = True
-                                                                              | otherwise = False
+                                                                              | otherwise                    = False
 
 -- getLJoinedRows
         -- @brief:
@@ -810,33 +795,33 @@ getRJoinedRows (matchedRow:matches) row  = (matchedRow ++ row) : (getRJoinedRows
         -- @return:
 getTableFromFormat :: FormatFunction -> Vars -> IO Table
 getTableFromFormat (OrderBy direction tableType) vars         =  do 
-                                                                table <- getTableFromType tableType vars
-                                                                let orderTable = getTableFromOrder direction table 
-                                                                return orderTable
+                                                                    table <- getTableFromType tableType vars
+                                                                    let orderTable = getTableFromOrder direction table 
+                                                                    return orderTable
 getTableFromFormat (OrderByCol cols direction tableType) vars = do 
-                                                                table <- getTableFromType tableType vars
-                                                                let orderTable = getTableFromOrderCol cols direction table
-                                                                return orderTable
+                                                                    table <- getTableFromType tableType vars
+                                                                    let orderTable = getTableFromOrderCol cols direction table
+                                                                    return orderTable
 getTableFromFormat (Limit limit tableType) vars               = do
-                                                                table <- getTableFromType tableType vars
-                                                                let limitTable = getTableFromLimit limit table
-                                                                return limitTable
+                                                                    table <- getTableFromType tableType vars
+                                                                    let limitTable = getTableFromLimit limit table
+                                                                    return limitTable
 getTableFromFormat (Offset offset tableType) vars             = do
-                                                                table <- getTableFromType tableType vars
-                                                                let offsetTable = getTableFromOffset offset table
-                                                                return offsetTable
+                                                                    table <- getTableFromType tableType vars
+                                                                    let offsetTable = getTableFromOffset offset table
+                                                                    return offsetTable
 getTableFromFormat (Last num tableType) vars                  = do
-                                                                table <- getTableFromType tableType vars
-                                                                let lastTable = getTableFromLast num table
-                                                                return lastTable
+                                                                    table <- getTableFromType tableType vars
+                                                                    let lastTable = getTableFromLast num table
+                                                                    return lastTable
 getTableFromFormat (Unique tableType) vars                    = do
-                                                                table <- getTableFromType tableType vars
-                                                                let uniqueTable = getTableFromUnique table
-                                                                return uniqueTable 
+                                                                    table <- getTableFromType tableType vars
+                                                                    let uniqueTable = getTableFromUnique table
+                                                                    return uniqueTable 
 getTableFromFormat (Transpose tableType) vars                 = do
-                                                                table <- getTableFromType tableType vars
-                                                                let transposeTable = getTableFromTranspose table
-                                                                return transposeTable 
+                                                                    table <- getTableFromType tableType vars
+                                                                    let transposeTable = getTableFromTranspose table
+                                                                    return transposeTable 
 
 -----------
 -- ORDER -- 
@@ -1101,6 +1086,27 @@ noLex e = do
 -- ======== NORMAL PRINT ======== -- 
 -- ============================== -- 
 
+
+-----------------
+-- MAIN METHOD --
+-----------------
+
+
+-- prettyPrint 
+        -- @brief:
+        -- @params: 
+        -- @return:
+prettyPrint :: String -> Table -> IO ()
+prettyPrint filename result = do
+                                 putStrLn("\n")
+                                 putStrLn("Running program : " ++ filename)
+                                 putStrLn("\n")
+
+                                 putStrLn("Program output : ")
+                                 putStrLn("\n")
+                                 prettyPrintTable result
+                                 putStrLn("\n")
+
 --------------------
 -- PRINTING TABLE --
 --------------------
@@ -1111,7 +1117,8 @@ noLex e = do
         -- @return:
 printTable :: Table -> IO ()
 printTable [] = return ()
-printTable (r:rs) = do printRow r
+printTable (r:rs) = do 
+                       printRow r
                        putStrLn ""
                        printTable rs 
 
@@ -1125,9 +1132,11 @@ printTable (r:rs) = do printRow r
         -- @return:
 printRow :: Row -> IO ()
 printRow [] = return ()
-printRow (cell:cells) | cells == [] = do putStr cell
+printRow (cell:cells) | cells == [] = do 
+                                         putStr cell
                                          printRow cells
-                      | otherwise   = do putStr cell
+                      | otherwise   = do 
+                                         putStr cell
                                          putStr ","
                                          printRow cells
 
@@ -1137,7 +1146,8 @@ printRow (cell:cells) | cells == [] = do putStr cell
         -- @return:
 printLines :: [String] -> IO ()
 printLines [] = return ()
-printLines (l:ls) = do putStrLn l
+printLines (l:ls) = do 
+                       putStrLn l
                        printLines ls
 
 -- ============================== -- 
@@ -1153,14 +1163,13 @@ printLines (l:ls) = do putStrLn l
         -- @params: 
         -- @return:
 prettyPrintTable :: Table -> IO ()
-prettyPrintTable []    = do prettyPrintTable [[""]] -- no table (empty file), so printing a one by one tabl
+prettyPrintTable []    = prettyPrintTable [[""]] -- no table (empty file), so printing a one by one tabl
 prettyPrintTable table = do
-                                let rowLabelledTable = getRowLabelledTable table 0 -- 0 is the index of the current row, which starts at 0
-                                let columnLabels = getColumnLabels ((getTableWidth rowLabelledTable) - 2)
-                                let columnRowLabelledTable = ("" : columnLabels) : rowLabelledTable
-                                let widths = getColumnWidths (transpose columnRowLabelledTable)                                
-
-                                prettyPrintTableAux columnRowLabelledTable widths 
+                            let rowLabelledTable = getRowLabelledTable table 0 -- 0 is the index of the current row, which starts at 0
+                            let columnLabels = getColumnLabels ((getTableWidth rowLabelledTable) - 2)
+                            let columnRowLabelledTable = ("" : columnLabels) : rowLabelledTable
+                            let widths = getColumnWidths (transpose columnRowLabelledTable)                                
+                            prettyPrintTableAux columnRowLabelledTable widths 
 
 -- prettyPrintTableAux
         -- @brief:
@@ -1168,7 +1177,8 @@ prettyPrintTable table = do
         -- @return:
 prettyPrintTableAux :: Table -> [Int] -> IO ()
 prettyPrintTableAux [] widths = return ()
-prettyPrintTableAux (row:rows) widths = do prettyPrintRow row widths 0 -- 0 is the index of the current column, which starts at 0
+prettyPrintTableAux (row:rows) widths = do 
+                                           prettyPrintRow row widths 0 -- 0 is the index of the current column, which starts at 0
 
                                            putStrLn ("\t" ++ hSeperator)
 
@@ -1189,13 +1199,16 @@ prettyPrintTableAux (row:rows) widths = do prettyPrintRow row widths 0 -- 0 is t
         -- @params: 
         -- @return:
 prettyPrintRow :: Row -> [Int] -> Int -> IO ()
-prettyPrintRow (cell:cells) widths currentCol | cells == []     = do putStr " | "
+prettyPrintRow (cell:cells) widths currentCol | cells == []     = do 
+                                                                     putStr " | "
                                                                      prettyPrintCell cell (widths!!currentCol)
                                                                      putStrLn " | " -- printing seperator onto a new line as this is the final cell
-                                              | currentCol == 0 = do putStr "\t" -- first cell is the row label, so need to tab and not provide seperator
+                                              | currentCol == 0 = do 
+                                                                     putStr "\t" -- first cell is the row label, so need to tab and not provide seperator
                                                                      prettyPrintCell cell (widths!!currentCol)
                                                                      prettyPrintRow cells widths (currentCol + 1)
-                                              | otherwise       = do putStr " | "
+                                              | otherwise       = do 
+                                                                     putStr " | "
                                                                      prettyPrintCell cell (widths!!currentCol)
                                                                      prettyPrintRow cells widths (currentCol + 1)
 
