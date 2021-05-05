@@ -227,6 +227,7 @@ getTableFromSelect (SelectColWhere cols predicates tableType) vars = do
         -- @params: 
         -- @return:
 selectTableCols :: [Int] -> Table -> Table
+selectTableCols cols []    = [] -- ERROR FIX: for case where the table is empty - just need to return the empty list (is what is expected in the test cases)
 selectTableCols cols table | validColumns = selectTableColsAux cols table
                            | otherwise    = error ("The column(s) '" ++ (show cols) ++ "' are invalid.@")
         where
@@ -455,6 +456,7 @@ getRowFromAssignment colNum val (cell:cells) = cell : (getRowFromAssignment (col
         -- @params: 
         -- @return:
 getTableFromWhere :: [Predicate(ColumnComparison)] -> Table ->  Table
+getTableFromWhere preds []    = [] -- ERROR FIX: Test cases expect output of nothing, and not an error in the when table is empty.
 getTableFromWhere preds table | validPreds = getTableFromWhereAux preds table
                               | otherwise = error ("The column predicate '" ++ (show preds) ++ "' is invalid.@")
         where 
@@ -670,6 +672,8 @@ getTableFromStandardJoin (lrow:lrows) lwidth (rrow:rrows) rwidth = (lrow ++ rrow
         -- @params: 
         -- @return:
 getTableFromInnerJoin :: [Predicate(TableComparison)] -> Table -> Table -> Table
+getTableFromInnerJoin preds []     rtable = [] -- ERROR FIX : Output expects empty table, currently would throw an error as the provided columns would be out of range
+getTableFromInnerJoin preds ltable []     = [] -- ERROR FIX : Output expects empty table, currently would throw an error as the provided columns would be out of range
 getTableFromInnerJoin preds ltable rtable | validPreds = getTableFromInnerJoinAux preds ltable rtable
                                           | otherwise  = error ("The table predicates '" ++ (show preds) ++ "' are invalid.@")
         where 
@@ -696,6 +700,7 @@ getTableFromInnerJoinAux predicates (lrow:lrows) rtable | joinedRows == [] = (ge
         -- @params: 
         -- @return:
 getTableFromLeftJoin :: [Predicate(TableComparison)] ->Table -> Table -> Table
+getTableFromLeftJoin preds []     rtable              = [] -- ERROR FIX : Output should be empty if left table is empty
 getTableFromLeftJoin preds ltable rtable | validPreds = getTableFromLeftJoinAux preds ltable rtable
                                          | otherwise  = error ("The table predicates '" ++ (show preds) ++ "' are invalid.@")
         where 
@@ -706,7 +711,7 @@ getTableFromLeftJoin preds ltable rtable | validPreds = getTableFromLeftJoinAux 
         -- @params: 
         -- @return:
 getTableFromLeftJoinAux :: [Predicate(TableComparison)] ->Table -> Table -> Table
-getTableFromLeftJoinAux predicates [] rtable                               = []
+getTableFromLeftJoinAux predicates [] rtable           = []
 getTableFromLeftJoinAux predicates (lrow:lrows) rtable | joinedRows == []  = (lrow ++ nullRRow) : (getTableFromLeftJoinAux predicates lrows rtable) -- couldn't find a matching row for the right table, so using nulls
                                                        | otherwise         = joinedRows ++ (getTableFromLeftJoinAux predicates lrows rtable)
         where
@@ -723,6 +728,7 @@ getTableFromLeftJoinAux predicates (lrow:lrows) rtable | joinedRows == []  = (lr
         -- @params: 
         -- @return:
 getTableFromRightJoin :: [Predicate(TableComparison)] ->Table -> Table -> Table
+getTableFromRightJoin preds ltable []     = [] -- ERROR FIX : Output should be empty if right table is empty
 getTableFromRightJoin preds ltable rtable | validPreds = getTableFromRightJoinAux preds ltable rtable
                                           | otherwise  = error ("The table predicates '" ++ (show preds) ++ "' are invalid.@")
         where 
@@ -1331,7 +1337,7 @@ isValidTableComparison (TableComparison lcol operator rcol) ltable rtable = and 
         -- @params: 
         -- @return:
 printTable :: Table -> IO ()
-printTable [] = return ()
+printTable [] = return () -- If there is no table, what needs to happen??
 printTable (r:rs) = do 
                        printRow r
                        hPutStrLn stdout ""
@@ -1381,13 +1387,21 @@ printLines (l:ls) = do
 prettyPrint :: String -> Table -> IO ()
 prettyPrint filename result = do
                                  hPutStrLn stdout ("\n")
-                                 hPutStrLn stdout ("Running program : " ++ filename)
+                                 hPutStrLn stdout (runningProgramColour)
                                  hPutStrLn stdout ("\n")
 
-                                 hPutStrLn stdout ("Program output : ")
+                                 hPutStrLn stdout (programOutputColour)
                                  hPutStrLn stdout ("\n")
                                  prettyPrintTable result
                                  hPutStrLn stdout ("\n")
+        where 
+                runningProgramColour = greenColour ++ "Running program : " ++ "\x1b[33m" ++ filename ++ "\x1b[0m"
+                runningProgram       = "Running program : " ++ filename
+                programOutputColour  = (greenColour ++ programOutput ++ baseColour)
+                programOutput        = "Program output : "
+                blueColour           = "\x1b[36m"
+                greenColour          = "\x1b[32m"
+                baseColour           = "\x1b[0m"
 
 --------------------
 -- PRINTING TABLE --
@@ -1398,13 +1412,14 @@ prettyPrint filename result = do
         -- @params: 
         -- @return:
 prettyPrintTable :: Table -> IO ()
-prettyPrintTable []    = prettyPrintTable [[""]] -- no table (empty file), so printing a one by one tabl
+prettyPrintTable []    = prettyPrintTable [[""]] -- empty table, so printing a one by one tabl
 prettyPrintTable table = do
                             let rowLabelledTable = getRowLabelledTable table 0 -- 0 is the index of the current row, which starts at 0
                             let columnLabels = getColumnLabels ((getTableWidth rowLabelledTable) - 2)
                             let columnRowLabelledTable = ("" : columnLabels) : rowLabelledTable
-                            let widths = getColumnWidths (transpose columnRowLabelledTable)                                
-                            prettyPrintTableAux columnRowLabelledTable widths 
+                            let widths = getColumnWidths (transpose columnRowLabelledTable)   
+                            let colouredTable = colourTable columnRowLabelledTable                             
+                            prettyPrintTableAux colouredTable widths 
 
 -- prettyPrintTableAux
         -- @brief:
@@ -1415,15 +1430,18 @@ prettyPrintTableAux [] widths = return ()
 prettyPrintTableAux (row:rows) widths = do 
                                            prettyPrintRow row widths 0 -- 0 is the index of the current column, which starts at 0
 
-                                           hPutStrLn stdout ("\t" ++ hSeperator)
+                                           hPutStrLn stdout ("\t" ++ colouredHSeperator)
 
                                            prettyPrintTableAux rows widths
         where   
-                hSeperator = concat (replicate neededAmount "-")
-                neededAmount = allWidths + vSeperators + vSeperatorSpaces
-                allWidths = sum widths                  -- width of every column
-                vSeperators = (length widths) - 1       -- the number of v seperators in the row (-1 as the row label does not have a v seperator on it's left-hand side)
-                vSeperatorSpaces = (length widths) * 2  -- the number of spaces around the v seperators
+                colouredHSeperator = blueColour ++ hSeperator ++ baseColour
+                blueColour         = "\x1b[36m"
+                baseColour         = "\x1b[0m"
+                hSeperator         = concat (replicate neededAmount "-")
+                neededAmount       = allWidths + vSeperators + vSeperatorSpaces
+                allWidths          = sum widths                  -- width of every column
+                vSeperators        = (length widths) - 1       -- the number of v seperators in the row (-1 as the row label does not have a v seperator on it's left-hand side)
+                vSeperatorSpaces   = (length widths) * 2  -- the number of spaces around the v seperators
 
 ------------------
 -- PRINTING ROW --
@@ -1435,17 +1453,22 @@ prettyPrintTableAux (row:rows) widths = do
         -- @return:
 prettyPrintRow :: Row -> [Int] -> Int -> IO ()
 prettyPrintRow (cell:cells) widths currentCol | cells == []     = do 
-                                                                     hPutStr stdout (" | ")
+                                                                     hPutStr stdout colouredVSeperator
                                                                      prettyPrintCell cell (widths!!currentCol)
-                                                                     hPutStrLn stdout (" | ") -- printing seperator onto a new line as this is the final cell
+                                                                     hPutStrLn stdout colouredVSeperator -- printing seperator onto a new line as this is the final cell
                                               | currentCol == 0 = do 
                                                                      hPutStr stdout "\t" -- first cell is the row label, so need to tab and not provide seperator
                                                                      prettyPrintCell cell (widths!!currentCol)
                                                                      prettyPrintRow cells widths (currentCol + 1)
                                               | otherwise       = do 
-                                                                     hPutStr stdout (" | ")
+                                                                     hPutStr stdout colouredVSeperator
                                                                      prettyPrintCell cell (widths!!currentCol)
                                                                      prettyPrintRow cells widths (currentCol + 1)
+        where
+                colouredVSeperator = blueColour ++ vSeperator ++ baseColour
+                blueColour         = "\x1b[36m"
+                baseColour         = "\x1b[0m"
+                vSeperator         = " | "
 
 -------------------
 -- PRINTING CELL --
@@ -1456,12 +1479,13 @@ prettyPrintRow (cell:cells) widths currentCol | cells == []     = do
         -- @params: 
         -- @return:
 prettyPrintCell :: String -> Int -> IO ()
-prettyPrintCell cell width | length cell < width = hPutStr stdout formattedCell
-                           | otherwise           = hPutStr stdout cell
+prettyPrintCell cell width | cellLength < width = hPutStr stdout formattedCell -- this cell is not the widest cell, so it needs to be formatted to add extra spaces
+                           | otherwise          = hPutStr stdout cell          -- this cell is the widest cell in the column, so it can just be printed without formatting
         where
                 formattedCell = concat (cell : extraSpaces)
                 extraSpaces   = replicate (neededSpaces) " "
-                neededSpaces  = width - (length cell)
+                neededSpaces  = width - cellLength
+                cellLength    = length cell - 5 -- (-5) as taking into account the colour that has been added to each cell (which is 5 characters long after ignoring excaped characters?)
 
 --------------------
 -- HELPER METHODS --
@@ -1500,3 +1524,54 @@ getRowLabelledTable [] index         = []
 getRowLabelledTable (row:rows) index = labelledRow : getRowLabelledTable rows (index + 1)
         where
                 labelledRow = ("R" ++ (show index)) : row
+
+
+---------------------
+-- COLOURING TABLE --
+---------------------
+
+
+-- colourTable
+        -- @brief:
+        -- @params: 
+        -- @return:
+colourTable :: Table -> Table
+colourTable table = colourTableAux table 0
+
+-- colourTableAux
+        -- @brief:
+        -- @params: 
+        -- @return:
+colourTableAux :: Table -> Int -> Table
+colourTableAux [] rowNum         = []
+colourTableAux (row:rows) 0      = (colourColumnRow row) : colourTableAux rows 1
+colourTableAux (row:rows) rowNum = (colourRow row 0) : colourTableAux rows (rowNum + 1)
+
+-- colourColumnRow
+        -- @brief:
+        -- @params: 
+        -- @return:
+colourColumnRow :: Row -> Row
+colourColumnRow []           = []
+colourColumnRow (cell:cells) = (colourCell cell columnLabelColour) : (colourColumnRow cells)
+        where 
+                columnLabelColour = "\x1b[35m"
+-- colourRow
+        -- @brief:
+        -- @params: 
+        -- @return:
+colourRow :: Row -> Int -> Row
+colourRow [] rowNum           = []
+colourRow (cell:cells) 0      = (colourCell cell rowLabelColour) :  (colourRow cells 1)
+        where
+                rowLabelColour = "\x1b[35m"
+colourRow (cell:cells) rowNum = (colourCell cell cellColour) : (colourRow cells (rowNum+1))
+        where
+                cellColour     =  "\x1b[33m"
+
+-- colourCell
+        -- @brief:
+        -- @params: 
+        -- @return:
+colourCell :: Cell -> String -> Cell
+colourCell cell colour = colour ++ cell
