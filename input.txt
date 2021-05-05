@@ -49,32 +49,27 @@
 
 -- Problem 3 -- 
 
-    LET p = READ "P.CSV";
-    LET q = READ "Q.CSV";
+    -- LET p = READ "P.CSV";
+    -- LET q = READ "Q.CSV";
 
-    LET joinedTable = JOIN INNER WHERE [LEFT.@0 == RIGHT.@0] ON p AND q;
+    -- LET joinedTable = JOIN INNER WHERE [LEFT.@0 == RIGHT.@0] ON p AND q;
 
-    LET p0p1 = SELECT [@0, @1] WHERE [@1 != ""] FROM joinedTable;
-    LET p0q1 = SELECT [@0, @5] WHERE [@1 == ""] FROM joinedTable;
-    LET firstColumn = ORDER IN ASC UNION p0p1 AND p0q1;
+    -- LET case1 = SELECT [@0,@1,@2,@3] WHERE [@1 != "", @2 != "", @3 != ""] FROM joinedTable;
+    -- LET case2 = SELECT [@0,@5,@2,@3] WHERE [@1 == "", @2 != "", @3 != ""] FROM joinedTable;
+    -- LET case3 = SELECT [@0,@1,@6,@3] WHERE [@1 != "", @2 == "", @3 != ""] FROM joinedTable;
+    -- LET case4 = SELECT [@0,@1,@2,@7] WHERE [@1 != "", @2 != "", @3 == ""] FROM joinedTable;
+    -- LET case5 = SELECT [@0,@5,@6,@3] WHERE [@1 == "", @2 == "", @3 != ""] FROM joinedTable;
+    -- LET case6 = SELECT [@0,@1,@6,@7] WHERE [@1 != "", @2 == "", @3 == ""] FROM joinedTable;
+    -- LET case7 = SELECT [@0,@5,@2,@7] WHERE [@1 == "", @2 != "", @3 == ""] FROM joinedTable;
+    -- LET case8 = SELECT [@0,@5,@6,@7] WHERE [@1 == "", @2 == "", @3 == ""] FROM joinedTable;
 
-    LET p0p2 = SELECT [@0, @2] WHERE [@2 != ""] FROM joinedTable;
-    LET p0q2 = SELECT [@0, @6] WHERE [@2 == ""] FROM joinedTable;
-    LET secondColumn = ORDER IN ASC UNION p0p2 AND p0q2;
+    -- LET finalTable = UNION case1 AND UNION case2 AND UNION case3 AND UNION case4 AND UNION case5 AND UNION case6 AND UNION case7 AND case8;
 
-    LET p0p3 = SELECT [@0, @3] WHERE [@3 != ""] FROM joinedTable;
-    LET p0q3 = SELECT [@0, @7] WHERE [@3 == ""] FROM joinedTable;
-    LET thirdColumn = ORDER IN ASC UNION p0p3 AND p0q3;
+    -- RETURN ORDER IN ASC final;
 
-    LET joinedColumns = JOIN ON firstColumn AND JOIN ON secondColumn AND thirdColumn;
-
-    LET finalTable = SELECT [@0,@1,@3,@5] FROM joinedColumns;
-
-    RETURN ORDER IN ASC finalTable;
-
-    -- input 1: PASS
-    -- input 2: PASS
-    -- input 3: PASS
+    -- input 1: 
+    -- input 2: 
+    -- input 3: 
     -- input 4: 
     -- input 5: 
     -- input 6: 
@@ -83,7 +78,40 @@
     -- input 9: 
     -- input 10: 
 
+-- Problem 4 -- 
 
+    -- LET a = READ "A.csv";
+
+    -- LET selectedTable = SELECT [@0,@1] WHERE [@1 != ""] FROM a;
+
+    -- RETURN ORDER IN ASC selectedTable;
+
+    -- input 1: PASS
+    -- input 2: PASS
+    -- input 3: PASS
+    -- input 4: PASS
+    -- input 5: PASS
+    -- input 6: PASS
+    -- input 7: PASS
+    -- input 8: PASS
+
+-- Problem 5 -- 
+
+    LET a = READ "A.csv";
+
+    LET joinedTable = JOIN ON a AND a;
+    LET extraColumn = INSERT COLUMN @1 INTO joinedTable;
+    LET updatedColumn = UPDATE TO [@1 = "0"] ON extraColumn;
+
+    RETURN ORDER IN ASC updatedColumn;
+
+    -- input 1: PASS
+    -- input 2: PASS
+    -- input 3: PASS
+    -- input 4: PASS
+    -- input 5: PASS
+    -- input 6: PASS
+    -- input 7: PASS
 
 
 

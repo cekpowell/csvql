@@ -293,6 +293,7 @@ insertValuesTableAux vals table = (table ++ [vals])
         -- @params: The Int is the index of the column in the new table (i.e., input of 1 means new table will have new column at index 1).
         -- @return:
 insertColumnTable :: Int -> Table -> Table
+insertColumnTable colNum []    = [] -- ERROR FIX: Inserting column into an empty table should give an empty table.
 insertColumnTable colNum table | validColNum = insertColumnTableAux colNum table
                                | otherwise = error ("The column number '" ++ (show colNum) ++ "' is invalid.@")
         where 
@@ -345,6 +346,7 @@ getTableFromDelete (DeleteAllWhere predicates tableType) vars = do
         -- @params: 
         -- @return:
 deleteTableCols :: [Int] -> Table -> Table
+deleteTableCols cols []    = [] -- ERROR FIX : Output expects empty file when deleting from an empty table
 deleteTableCols cols table | validColumns = deleteTableColsAux cols table
                            | otherwise    = error ("The column(s) '" ++ (show cols) ++ "' are invalid.@")
         where
@@ -938,6 +940,7 @@ getTableFromOrder Desc table = reverse (sort table)
         -- @params: 
         -- @return:
 getTableFromOrderCols :: Direction -> [Int] -> Table -> Table
+getTableFromOrderCols dir cols []    = [] -- ERROR FIX : Expected output is empty table when ordering empty table, not throwing an error
 getTableFromOrderCols dir cols table | validCols = getTableFromOrderColsAux dir cols table
                                      | otherwise = error ("The column(s) '" ++ (show cols) ++ "' are invalid.@")
         where
@@ -984,6 +987,7 @@ getRowFromColValue col cell (row:rows) | cell == (row!!col) = row
         -- @params: 
         -- @return:
 getTableFromLimit :: Int -> Table -> Table
+getTableFromLimit limit []    = [] -- ERROR FIX
 getTableFromLimit limit table | validLimit = getTableFromLimitAux limit table
                               | otherwise  = error ("The LIMIT value '" ++ (show limit) ++ "' is invalid.@")
         where
@@ -1006,6 +1010,7 @@ getTableFromLimitAux limit (row:rows) = row : (getTableFromLimitAux (limit-1) ro
         -- @params: 
         -- @return:
 getTableFromOffset :: Int -> Table -> Table
+getTableFromOffset offset []    = [] -- ERROR FIX
 getTableFromOffset offset table | validOffset = getTableFromOffsetAux offset table
                                 | otherwise = error ("The OFFSET value '" ++ (show offset) ++ "' is invalid.@")
         where
@@ -1027,6 +1032,7 @@ getTableFromOffsetAux offset table = drop offset table
         -- @params: 
         -- @return:
 getTableFromLast :: Int -> Table -> Table
+getTableFromlast llastNum []   = [] -- ERROR FIX
 getTableFromLast lastNum table | validLastNum = getTableFromLastAux lastNum table
                                | otherwise    = error ("The LAST value '" ++ (show lastNum) ++ "' is invalid.@")
         where
