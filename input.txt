@@ -1,7 +1,9 @@
 LET a = READ "A.CSV";
 LET b = READ "B.CSV";
 
-RETURN JOIN FULL ON a AND b;
+--LET c = JOIN INNER WHERE [LEFT.@0 == RIGHT.@0 AND LEFT.@1 == RIGHT.@1] ON a AND b;
+
+RETURN SELECT [@1,@3] FROM a;
 
 
 -- ==================================== --

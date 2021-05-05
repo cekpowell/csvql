@@ -46,7 +46,7 @@ type Vars = [Var]
         -- @params: 
         -- @return:
 main :: IO ()
-main = catch mainAux noLex 
+main = catch mainAux executionError 
 
 -- mainAux
         -- @brief:
@@ -125,10 +125,15 @@ getTableFromType :: TableType -> Vars -> IO Table
 getTableFromType (Read filename) vars           = do 
                                                      table <- getTableFromFile filename
                                                      let formattedTable = formatTable table
-                                                     return formattedTable              
+
+                                                     validateTable <- isValidTable formattedTable filename
+                                                     
+                                                     -- only get to this point if the table is valid
+                                                     return formattedTable 
+                                                     
 getTableFromType (Var varName) vars             = do 
                                                      let table = getTableFromVar varName vars
-                                                     let formattedTable = formatTable table
+                                                     let formattedTable = formatTable table   -- Why is format run? At the moment it only removed leading/trailing whitespace, but it is run in case formatting does something extra in the future, and woud therefore need to be appllied to all tablles, not just when they are loaded (I dunnno...)
                                                      return formattedTable
 getTableFromType (Function functionTable) vars  = do 
                                                      table <- getTableFromFunction functionTable vars
@@ -159,7 +164,7 @@ getTableFromFile filename = do
         -- @params: 
         -- @return:
 getTableFromVar :: String -> Vars -> Table
-getTableFromVar name []                                       = []
+getTableFromVar name []                                       = error ("Variable '" ++ name ++ "' is referenced but not declared.@") -- if got to end of vars and didnt find the variable, it must not exist, and therefore it is an error
 getTableFromVar name ((varName, table):vs) | varName == name  = table
                                            | otherwise        = getTableFromVar name vs
 
@@ -218,12 +223,22 @@ getTableFromSelect (SelectColWhere cols predicates tableType) vars = do
                                                                         return tableCols
 
 -- selectTableCols
-        -- @brief:
+        -- @brief: Used for error checking the input.
         -- @params: 
         -- @return:
 selectTableCols :: [Int] -> Table -> Table
-selectTableCols cols []          = []
-selectTableCols cols (row:rows)  = newRow : (selectTableCols cols rows)
+selectTableCols cols table | validColumns = selectTableColsAux cols table
+                           | otherwise    = error ("The column(s) '" ++ (show cols) ++ "' are invalid.@")
+        where
+                validColumns = isValidColumns cols table
+
+-- selectTableColsAux
+        -- @brief:
+        -- @params: 
+        -- @return:
+selectTableColsAux :: [Int] -> Table -> Table
+selectTableColsAux cols []          = []
+selectTableColsAux cols (row:rows)  = newRow : (selectTableColsAux cols rows)
         where
                 newRow = selectRowCols cols row
 
@@ -248,19 +263,47 @@ selectRowCols (col:cols) row   = [(row!!col)] ++ (selectRowCols cols row)
 getTableFromInsert :: InsertFunction -> Vars -> IO Table
 getTableFromInsert (InsertValues vals tableType) vars   = do 
                                                              table <- getTableFromType tableType vars
-                                                             return (table ++ [vals])
+                                                             let insertTable = insertValuesTable vals table
+                                                             return insertTable
 getTableFromInsert (InsertColumn colNum tableType) vars = do 
                                                              table <- getTableFromType tableType vars
                                                              let insertTable = insertColumnTable colNum table
                                                              return insertTable
 
--- insertColumnTable
+-- insertValuesTable
+        -- @brief: Used for error checking the input.
+        -- @params: 
+        -- @return:
+insertValuesTable :: [String] -> Table -> Table
+insertValuesTable vals table | validValues = insertValuesTableAux vals table
+                             | otherwise   = error ("The value(s) '" ++ (show vals) ++ "' are invalid.@")
+        where
+                validValues = length vals == getTableWidth table
+
+-- insertValuesTableAux
         -- @brief:
+        -- @params: 
+        -- @return:
+insertValuesTableAux :: [String] -> Table -> Table
+insertValuesTableAux vals table = (table ++ [vals])
+
+-- insertColumnTable
+        -- @brief: Used for error checking the input.
         -- @params: The Int is the index of the column in the new table (i.e., input of 1 means new table will have new column at index 1).
         -- @return:
 insertColumnTable :: Int -> Table -> Table
-insertColumnTable colNum []         = []
-insertColumnTable colNum (row:rows) = newRow : (insertColumnTable colNum rows)
+insertColumnTable colNum table | validColNum = insertColumnTableAux colNum table
+                               | otherwise = error ("The column number '" ++ (show colNum) ++ "' is invalid.@")
+        where 
+                validColNum = colNum <= getTableWidth table -- less than or equal to so you can add a column at the end of the table
+
+-- insertColumnTableAux
+        -- @brief:
+        -- @params: The Int is the index of the column in the new table (i.e., input of 1 means new table will have new column at index 1).
+        -- @return:
+insertColumnTableAux :: Int -> Table -> Table
+insertColumnTableAux colNum []         = []
+insertColumnTableAux colNum (row:rows) = newRow : (insertColumnTableAux colNum rows)
         where
                 newRow = insertColumnRow colNum row
 
@@ -287,21 +330,32 @@ getTableFromDelete (DeleteAll tableType) vars                 = return []
 getTableFromDelete (DeleteCol cols tableType) vars            = do 
                                                                    table <- getTableFromType tableType vars
                                                                    let tableCols = deleteTableCols cols table 
-                                                                   return tableCols
+                                                                   if tableCols == [[]] -- handling case where all table columns aree deletd, which would return [[]], but [[]] is not an empty table, [] is.
+                                                                           then return []
+                                                                   else return tableCols
 getTableFromDelete (DeleteAllWhere predicates tableType) vars = do 
                                                                    table <- getTableFromType tableType vars
                                                                    let whereTable = getTableFromWhere predicates table
                                                                    let deleteTable = table \\ whereTable
                                                                    return deleteTable
 
-
 -- deleteTableCols
-        -- @brief:
+        -- @brief: Used for error checking the input.
         -- @params: 
         -- @return:
 deleteTableCols :: [Int] -> Table -> Table
-deleteTableCols cols []         = []
-deleteTableCols cols (row:rows) = newRow : (deleteTableCols cols rows)
+deleteTableCols cols table | validColumns = deleteTableColsAux cols table
+                           | otherwise    = error ("The column(s) '" ++ (show cols) ++ "' are invalid.@")
+        where
+                validColumns = isValidColumns cols table
+
+-- deleteTableColsAux
+        -- @brief:
+        -- @params: 
+        -- @return:
+deleteTableColsAux :: [Int] -> Table -> Table
+deleteTableColsAux cols []         = []
+deleteTableColsAux cols (row:rows) = newRow : (deleteTableColsAux cols rows)
         where
                 sortedCols = reverse (sort cols) -- sort the list of columns into descending order, and then dont need to account for change in index
                 newRow = deleteRowCols sortedCols row
@@ -326,7 +380,6 @@ deleteRowCol col currentCol (cell:cells) | col == currentCol = cells
 -- =========== UPDATE =========== -- 
 -- ============================== -- 
 
--- todo... 
 
 -- getTableFromUpdate
         -- @brief:
@@ -397,14 +450,23 @@ getRowFromAssignment colNum val (cell:cells) = cell : (getRowFromAssignment (col
 -- ============ WHERE =========== -- 
 -- ============================== -- 
 
-
 -- getTableFromWhere
         -- @brief:
         -- @params: 
         -- @return:
 getTableFromWhere :: [Predicate(ColumnComparison)] -> Table ->  Table
-getTableFromWhere [] table           = table
-getTableFromWhere (pred:preds) table = getTableFromWhere preds (getRowsFromColumnPredicate pred table 0)
+getTableFromWhere preds table | validPreds = getTableFromWhereAux preds table
+                              | otherwise = error ("The column predicate '" ++ (show preds) ++ "' is invalid.@")
+        where 
+                validPreds = isValidColPreds preds table
+
+-- getTableFromWhereAux
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromWhereAux :: [Predicate(ColumnComparison)] -> Table ->  Table
+getTableFromWhereAux [] table           = table
+getTableFromWhereAux (pred:preds) table = getTableFromWhere preds (getRowsFromColumnPredicate pred table 0)
 
 -- getRowsFromColumnPredicate
         -- @brief:
@@ -607,10 +669,20 @@ getTableFromStandardJoin (lrow:lrows) lwidth (rrow:rrows) rwidth = (lrow ++ rrow
         -- @brief:
         -- @params: 
         -- @return:
-getTableFromInnerJoin :: [Predicate(TableComparison)] ->Table -> Table -> Table
-getTableFromInnerJoin predicates [] rtable           = []
-getTableFromInnerJoin predicates (lrow:lrows) rtable | joinedRows == [] = (getTableFromInnerJoin predicates lrows rtable) -- couldn't find a matching row for the right table, so neither row is included
-                                                     | otherwise        = joinedRows ++ (getTableFromInnerJoin predicates lrows rtable)
+getTableFromInnerJoin :: [Predicate(TableComparison)] -> Table -> Table -> Table
+getTableFromInnerJoin preds ltable rtable | validPreds = getTableFromInnerJoinAux preds ltable rtable
+                                          | otherwise  = error ("The table predicates '" ++ (show preds) ++ "' are invalid.@")
+        where 
+                validPreds = isValidTablePreds preds ltable rtable
+
+-- getTableFromInnerJoinAaux
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromInnerJoinAux :: [Predicate(TableComparison)] ->Table -> Table -> Table
+getTableFromInnerJoinAux predicates [] rtable           = []
+getTableFromInnerJoinAux predicates (lrow:lrows) rtable | joinedRows == [] = (getTableFromInnerJoinAux predicates lrows rtable) -- couldn't find a matching row for the right table, so neither row is included
+                                                        | otherwise        = joinedRows ++ (getTableFromInnerJoinAux predicates lrows rtable)
         where
                 matchedRRows = (getRowsFromTablePredicates predicates lrow rtable) -- every row in rtable that has the same column value as ltable
                 joinedRows   = getLJoinedRows lrow matchedRRows -- the row in ltable joined to every row it matches in rtable
@@ -624,9 +696,19 @@ getTableFromInnerJoin predicates (lrow:lrows) rtable | joinedRows == [] = (getTa
         -- @params: 
         -- @return:
 getTableFromLeftJoin :: [Predicate(TableComparison)] ->Table -> Table -> Table
-getTableFromLeftJoin predicates [] rtable                               = []
-getTableFromLeftJoin predicates (lrow:lrows) rtable | joinedRows == []  = (lrow ++ nullRRow) : (getTableFromLeftJoin predicates lrows rtable) -- couldn't find a matching row for the right table, so using nulls
-                                                    | otherwise         = joinedRows ++ (getTableFromLeftJoin predicates lrows rtable)
+getTableFromLeftJoin preds ltable rtable | validPreds = getTableFromLeftJoinAux preds ltable rtable
+                                         | otherwise  = error ("The table predicates '" ++ (show preds) ++ "' are invalid.@")
+        where 
+                validPreds = isValidTablePreds preds ltable rtable
+
+-- getTableFromLeftJoinAux
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromLeftJoinAux :: [Predicate(TableComparison)] ->Table -> Table -> Table
+getTableFromLeftJoinAux predicates [] rtable                               = []
+getTableFromLeftJoinAux predicates (lrow:lrows) rtable | joinedRows == []  = (lrow ++ nullRRow) : (getTableFromLeftJoinAux predicates lrows rtable) -- couldn't find a matching row for the right table, so using nulls
+                                                       | otherwise         = joinedRows ++ (getTableFromLeftJoinAux predicates lrows rtable)
         where
                 matchedRRows = (getRowsFromTablePredicates predicates lrow rtable)
                 joinedRows   = getLJoinedRows lrow matchedRRows 
@@ -636,15 +718,24 @@ getTableFromLeftJoin predicates (lrow:lrows) rtable | joinedRows == []  = (lrow 
 -- RIGHT JOIN  -- 
 -----------------
 
-
 -- getTableFromRightJoin
         -- @brief:
         -- @params: 
         -- @return:
 getTableFromRightJoin :: [Predicate(TableComparison)] ->Table -> Table -> Table
-getTableFromRightJoin predicates ltable []                              = []
-getTableFromRightJoin predicates ltable (rrow:rrows) | joinedRows == [] = (nullLRow ++ rrow) : (getTableFromRightJoin predicates ltable rrows) -- couldn't find a matching row for the right table, so using nulls
-                                                     | otherwise        = joinedRows ++ (getTableFromRightJoin predicates ltable rrows)
+getTableFromRightJoin preds ltable rtable | validPreds = getTableFromRightJoinAux preds ltable rtable
+                                          | otherwise  = error ("The table predicates '" ++ (show preds) ++ "' are invalid.@")
+        where 
+                validPreds = isValidTablePreds preds ltable rtable
+
+-- getTableFromRightJoinAux
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromRightJoinAux :: [Predicate(TableComparison)] ->Table -> Table -> Table
+getTableFromRightJoinAux predicates ltable []                              = []
+getTableFromRightJoinAux predicates ltable (rrow:rrows) | joinedRows == [] = (nullLRow ++ rrow) : (getTableFromRightJoinAux predicates ltable rrows) -- couldn't find a matching row for the right table, so using nulls
+                                                        | otherwise        = joinedRows ++ (getTableFromRightJoinAux predicates ltable rrows)
         where
                 matchedLRows = (getRowsFromTablePredicatesR predicates rrow ltable) -- calling the method to get the rows based on Right-joining
                 joinedRows   = getRJoinedRows matchedLRows rrow 
@@ -701,8 +792,8 @@ getRowsFromTablePredicatesR [] row table           = []
 getRowsFromTablePredicatesR (pred:preds) row table = getRowsFromTablePredicate switchedPred row table ++ getRowsFromTablePredicatesR preds row table
         where
                 switchedPred = switchTablePredicate pred -- predicate must be switched because we are now comparing right row to left table, 
-                                                              -- but the predicate is defined for left row to right table. Switching means that the 
-                                                              -- evaluator functions will consider the predicate correctly.
+                                                         -- but the predicate is defined for left row to right table. Switching means that the 
+                                                         -- evaluator functions will consider the predicate correctly.
 
 -- switchTablePredicate
         -- @brief:
@@ -801,7 +892,7 @@ getTableFromFormat (OrderBy direction tableType) vars         =  do
                                                                     return orderTable
 getTableFromFormat (OrderByCol direction cols tableType) vars = do 
                                                                     table <- getTableFromType tableType vars
-                                                                    let orderTable = getTableFromOrderCol direction cols table
+                                                                    let orderTable = getTableFromOrderCols direction cols table
                                                                     return orderTable
 getTableFromFormat (Limit limit tableType) vars               = do
                                                                     table <- getTableFromType tableType vars
@@ -836,18 +927,28 @@ getTableFromOrder :: Direction -> Table -> Table
 getTableFromOrder Asc table  = sort table
 getTableFromOrder Desc table = reverse (sort table)
 
--- getTableFromOrderCol
+-- getTableFromOrderCols
+        -- @brief: Used for error checking the input.
+        -- @params: 
+        -- @return:
+getTableFromOrderCols :: Direction -> [Int] -> Table -> Table
+getTableFromOrderCols dir cols table | validCols = getTableFromOrderColsAux dir cols table
+                                     | otherwise = error ("The column(s) '" ++ (show cols) ++ "' are invalid.@")
+        where
+                validCols = isValidColumns cols table
+
+-- getTableFromOrderColsAux
         -- @brief:
         -- @params: 
         -- @return:
-getTableFromOrderCol :: Direction -> [Int] -> Table -> Table
-getTableFromOrderCol dir [] table | dir == Asc  = sort table
-                                  | dir == Desc = reverse (sort table)
-getTableFromOrderCol dir (col:cols) table       = getTableFromSortedCol col sortedCol sortedTable
+getTableFromOrderColsAux :: Direction -> [Int] -> Table -> Table
+getTableFromOrderColsAux dir [] table | dir == Asc  = sort table
+                                      | dir == Desc = reverse (sort table)
+getTableFromOrderColsAux dir (col:cols) table       = getTableFromSortedCol col sortedCol sortedTable
         where
                 sortedCol | dir == Asc  = sort((transpose table )!!col)
                           | dir == Desc = reverse (sort((transpose table )!!col))
-                sortedTable             = getTableFromOrderCol dir cols table
+                sortedTable             = getTableFromOrderColsAux dir cols table
 
 -- getTableFromSortedCol
         -- @brief:
@@ -877,8 +978,18 @@ getRowFromColValue col cell (row:rows) | cell == (row!!col) = row
         -- @params: 
         -- @return:
 getTableFromLimit :: Int -> Table -> Table
-getTableFromLimit 0 table = []
-getTableFromLimit limit (row:rows) = row : (getTableFromLimit (limit-1) rows)
+getTableFromLimit limit table | validLimit = getTableFromLimitAux limit table
+                              | otherwise  = error ("The LIMIT value '" ++ (show limit) ++ "' is invalid.@")
+        where
+                validLimit = limit <= length table
+
+-- getTableFromLimitAux
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromLimitAux :: Int -> Table -> Table
+getTableFromLimitAux 0 table = []
+getTableFromLimitAux limit (row:rows) = row : (getTableFromLimitAux (limit-1) rows)
 
 ------------
 -- OFFSET -- 
@@ -889,7 +1000,17 @@ getTableFromLimit limit (row:rows) = row : (getTableFromLimit (limit-1) rows)
         -- @params: 
         -- @return:
 getTableFromOffset :: Int -> Table -> Table
-getTableFromOffset offset table = drop offset table
+getTableFromOffset offset table | validOffset = getTableFromOffsetAux offset table
+                                | otherwise = error ("The OFFSET value '" ++ (show offset) ++ "' is invalid.@")
+        where
+                validOffset = offset < length table
+
+-- getTableFromOffsetAux
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromOffsetAux :: Int -> Table -> Table
+getTableFromOffsetAux offset table = drop offset table
 
 ----------
 -- LAST -- 
@@ -900,7 +1021,17 @@ getTableFromOffset offset table = drop offset table
         -- @params: 
         -- @return:
 getTableFromLast :: Int -> Table -> Table
-getTableFromLast lastNum table = drop ((length table) - (lastNum)) table
+getTableFromLast lastNum table | validLastNum = getTableFromLastAux lastNum table
+                               | otherwise    = error ("The LAST value '" ++ (show lastNum) ++ "' is invalid.@")
+        where
+                validLastNum = lastNum <= length table
+
+-- getTableFromLastAux
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromLastAux :: Int -> Table -> Table 
+getTableFromLastAux lastNum table = drop ((length table) - (lastNum)) table
 
 ------------
 -- UNIQUE -- 
@@ -1018,8 +1149,8 @@ getLinesFromTable (row:rows) = newRow : (getLinesFromTable rows)
         -- @params: 
         -- @return:
 getTableWidth :: Table -> Int
-getTableWidth []    = 0
-getTableWidth table = length (table!!0) -- CAUSES PROBLEMS WHEN INPUT FILE IS EMPTY
+getTableWidth []    = 0 -- for case when input file is empty
+getTableWidth table = length (table!!0) -- CAUSES PROBLEMS IF TABLE IS NOT UNIFORM
 
 -- getNullRow
         -- @brief:
@@ -1059,6 +1190,8 @@ contains val (x:xs) | x == val    = True
                     | otherwise     = contains val xs
 
 
+
+
 -- ================================================================================ --
 -- ================================================================================ --
 -- =============================== ERRROR HANDLING  =============================== --
@@ -1068,14 +1201,112 @@ contains val (x:xs) | x == val    = True
 
 
 
-noLex :: ErrorCall -> IO ()
-noLex e = do 
-             let err =  show e
-             hPutStr stderr ("Problem with parsing : " ++ err)
-             return ()
+-- executionError 
+        -- @brief:
+        -- @params: 
+        -- @return:
+executionError :: ErrorCall -> IO ()
+executionError e = do 
+                      let err = show e
+                      let msg = (splitOn '@' err)!!0 -- dodgy code but it will do. Wanted to seperate the error message away from the error object, so put a '@' at the end of every error message. Can then get just the message by splitting it based on the '@' delimiter. Otherwise, it prints out the stack trace which is not good.
+                      hPutStrLn stderr ("\x1b[31m" ++ "### EXECUTION ERROR ### : " ++ msg ++ "\x1b[0m")
+                      pure ()
+
+-- isValidTable
+        -- @brief:
+        -- @params: 
+        -- @return:
+isValidTable :: Table -> String -> IO Bool
+isValidTable table name = do
+                             uniformTable <- isUniformTable table name
+                             -- other conditions to check here
+                        
+                             -- if error not thrown yet, table is valid, so returning true
+                             return True
+
+-- isUniformTable
+        -- @brief:
+        -- @params: 
+        -- @return:
+isUniformTable :: Table -> String -> IO Bool
+isUniformTable [] name               = return True
+isUniformTable (row:[]) name         = return True
+isUniformTable (row1:row2:rows) name | rows == [] = do 
+                                                       if (length row1 == length row2)
+                                                               then return True
+                                                       else error ("The table '" ++ name ++  "' is not uniform.@")
+                                     | otherwise  = do 
+                                                       uniformRows <- (isUniformTable rows name)
+                                                       let uniformTable = and [(length row1 == length row2), uniformRows]
+                                                       if uniformTable
+                                                               then return True
+                                                       else error ("The table '" ++ name ++  "' is not uniform.@")
+
+-- isValidColumns
+        -- @brief:
+        -- @params: 
+        -- @return:
+isValidColumns :: [Int] -> Table -> Bool
+isValidColumns [] table         = True
+isValidColumns (col:cols) table = and [(col < getTableWidth table),(isValidColumns cols table)]
+
+-- isValidColPreds
+        -- @brief:
+        -- @params: 
+        -- @return:
+isValidColPreds :: [Predicate(ColumnComparison)] -> Table -> Bool
+isValidColPreds [] table = True
+isValidColPreds (pred:preds) table = and [(isValidColPredicate pred table), ((isValidColPreds preds table))]
+
+-- isValidColPredicate
+        -- @brief:
+        -- @params: 
+        -- @return:
+isValidColPredicate :: Predicate(ColumnComparison) -> Table -> Bool
+isValidColPredicate (Not predicate) table               = isValidColPredicate predicate table
+isValidColPredicate (And predicate1 predicate2) table   = and [(isValidColPredicate predicate1 table),  (isValidColPredicate predicate2 table)]
+isValidColPredicate (Or predicate1 predicate2) table    = or  [(isValidColPredicate predicate1 table),  (isValidColPredicate predicate2 table)]
+isValidColPredicate (Comparison columnComparison) table = isValidColComparison columnComparison table
+
+-- isValidColComparison
+        -- @brief:
+        -- @params: 
+        -- @return:
+isValidColComparison :: ColumnComparison -> Table -> Bool
+isValidColComparison (ColVal col cOperator val) table               = col < getTableWidth table
+isValidColComparison (ColCol col1 cOperator col2) table             = and [(col1 < getTableWidth table),(col2 < getTableWidth table)]
+isValidColComparison (IndexVal operator val cOperator result) table = True
+
+-- isValidTablePreds
+        -- @brief:
+        -- @params: 
+        -- @return:
+isValidTablePreds :: [Predicate(TableComparison)] -> Table -> Table -> Bool
+isValidTablePreds [] ltable rtable = True
+isValidTablePreds (pred:preds) ltable rtable = and [(isValidTablePredicate pred ltable rtable), ((isValidTablePreds preds ltable rtable))]
+
+-- isValidTablePredicate
+        -- @brief:
+        -- @params: 
+        -- @return:
+isValidTablePredicate :: Predicate(TableComparison) -> Table -> Table -> Bool
+isValidTablePredicate (Not predicate) ltable rtable              = isValidTablePredicate predicate ltable rtable 
+isValidTablePredicate (And predicate1 predicate2) ltable rtable  = and [(isValidTablePredicate predicate1 ltable rtable ),  (isValidTablePredicate predicate2 ltable rtable )]
+isValidTablePredicate (Or predicate1 predicate2) ltable rtable   = or  [(isValidTablePredicate predicate1 ltable rtable ),  (isValidTablePredicate predicate2 ltable rtable )]
+isValidTablePredicate (Comparison tableComparison) ltable rtable = isValidTableComparison tableComparison ltable rtable 
+
+-- isValidTableComparison
+        -- @brief:
+        -- @params: 
+        -- @return:
+isValidTableComparison :: TableComparison -> Table -> Table -> Bool
+isValidTableComparison (TableComparison lcol operator rcol) ltable rtable = and [(validLCol),(validRCol)]
+        where
+                validLCol = lcol < length ltable
+                validRCol = rcol < length rtable
 
 
-             
+
 
 -- ================================================================================ --
 -- ================================================================================ --
@@ -1084,30 +1315,11 @@ noLex e = do
 -- ================================================================================ --
 
 
+
+
 -- ============================== -- 
 -- ======== NORMAL PRINT ======== -- 
 -- ============================== -- 
-
-
------------------
--- MAIN METHOD --
------------------
-
-
--- prettyPrint 
-        -- @brief:
-        -- @params: 
-        -- @return:
-prettyPrint :: String -> Table -> IO ()
-prettyPrint filename result = do
-                                 hPutStrLn stdout ("\n")
-                                 hPutStrLn stdout ("Running program : " ++ filename)
-                                 hPutStrLn stdout ("\n")
-
-                                 hPutStrLn stdout ("Program output : ")
-                                 hPutStrLn stdout ("\n")
-                                 prettyPrintTable result
-                                 hPutStrLn stdout ("\n")
 
 
 --------------------
@@ -1157,6 +1369,26 @@ printLines (l:ls) = do
 -- ======== PRETTY PRINT ======== -- 
 -- ============================== -- 
 
+-----------------
+-- MAIN METHOD --
+-----------------
+
+
+-- prettyPrint 
+        -- @brief:
+        -- @params: 
+        -- @return:
+prettyPrint :: String -> Table -> IO ()
+prettyPrint filename result = do
+                                 hPutStrLn stdout ("\n")
+                                 hPutStrLn stdout ("Running program : " ++ filename)
+                                 hPutStrLn stdout ("\n")
+
+                                 hPutStrLn stdout ("Program output : ")
+                                 hPutStrLn stdout ("\n")
+                                 prettyPrintTable result
+                                 hPutStrLn stdout ("\n")
+
 --------------------
 -- PRINTING TABLE --
 --------------------
@@ -1203,15 +1435,15 @@ prettyPrintTableAux (row:rows) widths = do
         -- @return:
 prettyPrintRow :: Row -> [Int] -> Int -> IO ()
 prettyPrintRow (cell:cells) widths currentCol | cells == []     = do 
-                                                                     hPutStr stdout " | "
+                                                                     hPutStr stdout (" | ")
                                                                      prettyPrintCell cell (widths!!currentCol)
-                                                                     hPutStrLn stdout " | " -- printing seperator onto a new line as this is the final cell
+                                                                     hPutStrLn stdout (" | ") -- printing seperator onto a new line as this is the final cell
                                               | currentCol == 0 = do 
                                                                      hPutStr stdout "\t" -- first cell is the row label, so need to tab and not provide seperator
                                                                      prettyPrintCell cell (widths!!currentCol)
                                                                      prettyPrintRow cells widths (currentCol + 1)
                                               | otherwise       = do 
-                                                                     hPutStr stdout " | "
+                                                                     hPutStr stdout (" | ")
                                                                      prettyPrintCell cell (widths!!currentCol)
                                                                      prettyPrintRow cells widths (currentCol + 1)
 
