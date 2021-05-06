@@ -59,6 +59,8 @@ import Tokens
     Right        { TokenRight _ }
     Outer        { TokenOuter _ }
     Full         { TokenFull _ }
+    Merge        { TokenMerge _ }
+    Keeping      { TokenKeeping _ }
     On           { TokenOn _ }
     Order        { TokenOrder _ }
     In           { TokenIn _ }
@@ -209,12 +211,13 @@ SetFunction : Union TableType And TableType        { Union $2 $4 }
 
 -- JOIN --
 
-JoinFunction : Join On TableType And TableType                                              { JoinStandard $3 $5 }
-             | Join Inner Where List(Predicate(TableComparison)) On TableType And TableType { JoinInner $4 $6 $8 }
-             | Join Left  Where List(Predicate(TableComparison)) On TableType And TableType { JoinLeft $4 $6 $8 }
-             | Join Right Where List(Predicate(TableComparison)) On TableType And TableType { JoinRight $4 $6 $8 }
-             | Join Outer Where List(Predicate(TableComparison)) On TableType And TableType { JoinOuter $4 $6 $8 }
-             | Join Full On TableType And TableType                                         { JoinFull $4 $6 }
+JoinFunction : Join On TableType And TableType                                                           { JoinStandard $3 $5 }
+             | Join Inner Where List(Predicate(TableComparison)) On TableType And TableType              { JoinInner $4 $6 $8 }
+             | Join Left  Where List(Predicate(TableComparison)) On TableType And TableType              { JoinLeft $4 $6 $8 }
+             | Join Right Where List(Predicate(TableComparison)) On TableType And TableType              { JoinRight $4 $6 $8 }
+             | Join Outer Where List(Predicate(TableComparison)) On TableType And TableType              { JoinOuter $4 $6 $8 }
+             | Join Full On TableType And TableType                                                      { JoinFull $4 $6 }
+             | Merge Where List(Predicate(TableComparison)) Keeping List(ColumnRef) On TableType And TableType { JoinMerge $3 $5 $7 $9 }
 
 -- FORMAT -- 
 
@@ -362,6 +365,7 @@ data JoinFunction = JoinStandard TableType TableType
                   | JoinRight [Predicate(TableComparison)] TableType TableType 
                   | JoinOuter [Predicate(TableComparison)] TableType TableType 
                   | JoinFull TableType TableType
+                  | JoinMerge [Predicate(TableComparison)] [Int] TableType TableType 
                     deriving (Show, Eq)
 
 data FormatFunction = OrderBy Direction TableType

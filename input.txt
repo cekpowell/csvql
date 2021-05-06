@@ -1,8 +1,5 @@
 
 
-
--- TESTING -- 
-
 -- Problem 1 -- 
 
     -- LET a = READ "A.CSV";
@@ -49,34 +46,23 @@
 
 -- Problem 3 -- 
 
-    -- LET p = READ "P.CSV";
-    -- LET q = READ "Q.CSV";
+    LET p = READ "P.csv";
+    LET q = READ "Q.csv";
 
-    -- LET joinedTable = JOIN INNER WHERE [LEFT.@0 == RIGHT.@0] ON p AND q;
+    LET mergedTables = MERGE WHERE [LEFT.@0 == RIGHT.@0] KEEPING [@0] ON p AND q;
 
-    -- LET case1 = SELECT [@0,@1,@2,@3] WHERE [@1 != "", @2 != "", @3 != ""] FROM joinedTable;
-    -- LET case2 = SELECT [@0,@5,@2,@3] WHERE [@1 == "", @2 != "", @3 != ""] FROM joinedTable;
-    -- LET case3 = SELECT [@0,@1,@6,@3] WHERE [@1 != "", @2 == "", @3 != ""] FROM joinedTable;
-    -- LET case4 = SELECT [@0,@1,@2,@7] WHERE [@1 != "", @2 != "", @3 == ""] FROM joinedTable;
-    -- LET case5 = SELECT [@0,@5,@6,@3] WHERE [@1 == "", @2 == "", @3 != ""] FROM joinedTable;
-    -- LET case6 = SELECT [@0,@1,@6,@7] WHERE [@1 != "", @2 == "", @3 == ""] FROM joinedTable;
-    -- LET case7 = SELECT [@0,@5,@2,@7] WHERE [@1 == "", @2 != "", @3 == ""] FROM joinedTable;
-    -- LET case8 = SELECT [@0,@5,@6,@7] WHERE [@1 == "", @2 == "", @3 == ""] FROM joinedTable;
+    RETURN ORDER IN ASC mergedTables;
 
-    -- LET finalTable = UNION case1 AND UNION case2 AND UNION case3 AND UNION case4 AND UNION case5 AND UNION case6 AND UNION case7 AND case8;
-
-    -- RETURN ORDER IN ASC final;
-
-    -- input 1: 
-    -- input 2: 
-    -- input 3: 
-    -- input 4: 
-    -- input 5: 
-    -- input 6: 
-    -- input 7: 
-    -- input 8: 
-    -- input 9: 
-    -- input 10: 
+    -- input 1: PASS
+    -- input 2: PASS
+    -- input 3: PASS
+    -- input 4: PASS
+    -- input 5: PASS
+    -- input 6: PASS
+    -- input 7: PASS
+    -- input 8: PASS
+    -- input 9: PASS
+    -- input 10: PASS
 
 -- Problem 4 -- 
 
@@ -97,13 +83,13 @@
 
 -- Problem 5 -- 
 
-    LET a = READ "A.csv";
+    -- LET a = READ "A.csv";
 
-    LET joinedTable = JOIN ON a AND a;
-    LET extraColumn = INSERT COLUMN @1 INTO joinedTable;
-    LET updatedColumn = UPDATE TO [@1 = "0"] ON extraColumn;
+    -- LET joinedTable = JOIN ON a AND a;
+    -- LET extraColumn = INSERT COLUMN @1 INTO joinedTable;
+    -- LET updatedColumn = UPDATE TO [@1 = "0"] ON extraColumn;
 
-    RETURN ORDER IN ASC updatedColumn;
+    -- RETURN ORDER IN ASC updatedColumn;
 
     -- input 1: PASS
     -- input 2: PASS
@@ -138,8 +124,27 @@
 
 
 
+-------------------
+-- OLD PROBLEM 3 --
+------------------- 
 
+    -- LET p = READ "P.CSV";
+    -- LET q = READ "Q.CSV";
 
+    -- LET joinedTable = JOIN INNER WHERE [LEFT.@0 == RIGHT.@0] ON p AND q;
+
+    -- LET case1 = SELECT [@0,@1,@2,@3] WHERE [@1 != "", @2 != "", @3 != ""] FROM joinedTable;
+    -- LET case2 = SELECT [@0,@5,@2,@3] WHERE [@1 == "", @2 != "", @3 != ""] FROM joinedTable;
+    -- LET case3 = SELECT [@0,@1,@6,@3] WHERE [@1 != "", @2 == "", @3 != ""] FROM joinedTable;
+    -- LET case4 = SELECT [@0,@1,@2,@7] WHERE [@1 != "", @2 != "", @3 == ""] FROM joinedTable;
+    -- LET case5 = SELECT [@0,@5,@6,@3] WHERE [@1 == "", @2 == "", @3 != ""] FROM joinedTable;
+    -- LET case6 = SELECT [@0,@1,@6,@7] WHERE [@1 != "", @2 == "", @3 == ""] FROM joinedTable;
+    -- LET case7 = SELECT [@0,@5,@2,@7] WHERE [@1 == "", @2 != "", @3 == ""] FROM joinedTable;
+    -- LET case8 = SELECT [@0,@5,@6,@7] WHERE [@1 == "", @2 == "", @3 == ""] FROM joinedTable;
+
+    -- LET finalTable = UNION case1 AND UNION case2 AND UNION case3 AND UNION case4 AND UNION case5 AND UNION case6 AND UNION case7 AND case8;
+
+    -- RETURN ORDER IN ASC final;
 
 
 

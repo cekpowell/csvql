@@ -69,6 +69,8 @@ tokens :-
   RIGHT         { \p s -> TokenRight p }
   OUTER         { \p s -> TokenOuter p }
   FULL          { \p s -> TokenFull p }
+  MERGE         { \p s -> TokenMerge p }
+  KEEPING       { \p s -> TokenKeeping p }
   ON            { \p s -> TokenOn p }
   ORDER         { \p s -> TokenOrder p }
   IN            { \p s -> TokenIn p }
@@ -205,6 +207,8 @@ data Token =
               | TokenRight AlexPosn
               | TokenOuter AlexPosn
               | TokenFull AlexPosn
+              | TokenMerge AlexPosn
+              | TokenKeeping AlexPosn
               | TokenOn AlexPosn
 
                 -- FORMAT -- 
@@ -331,6 +335,8 @@ tokenPosn (TokenLeft (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenRight (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenOuter (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenFull (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenMerge (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenKeeping (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenOn (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 
 tokenPosn (TokenOrder (AlexPn a l c)) = show(l) ++ ":" ++ show(c)

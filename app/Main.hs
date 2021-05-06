@@ -4,7 +4,6 @@ module Main where
 -- IMPORT STATEMENTS -- 
 -----------------------
 
-import Lib ()
 import Tokens
 import Grammar
 import System.Environment
@@ -646,6 +645,11 @@ getTableFromJoin (JoinFull ltableType rtableType) vars             = do
                                                                         rtable <- getTableFromType rtableType vars
                                                                         let joinTable = getTableFromFullJoin ltable rtable
                                                                         return joinTable
+getTableFromJoin (JoinMerge preds keeps ltableType rtableType) vars = do 
+                                                                        ltable <- getTableFromType ltableType vars
+                                                                        rtable <- getTableFromType rtableType vars
+                                                                        let joinTable = getTableFromMerge preds ltable rtable keeps
+                                                                        return joinTable
 
 -------------------
 -- STANDARD JOIN -- 
@@ -776,7 +780,49 @@ getTableFromFullJoin [] table         = []
 getTableFromFullJoin (row:rows) table = joinedRows ++ (getTableFromFullJoin rows table)
         where
                 joinedRows = getLJoinedRows row table
-        
+
+-----------
+-- MERGE --
+-----------
+
+-- getTableFromMerge
+        -- @brief:
+        -- @params: 
+        -- @return:v
+getTableFromMerge :: [Predicate(TableComparison)] -> Table -> Table -> [Int] -> Table
+getTableFromMerge preds ltable rtable keeps = mergeTable joinedTable maxIndex keeps
+        where 
+                joinedTable = getTableFromInnerJoin preds ltable rtable 
+                maxIndex = getTableWidth ltable - 1 -- PROBLEM : Assumes both tables have the same width
+
+-- mergeTable
+        -- @brief:
+        -- @params: 
+        -- @return:
+mergeTable :: Table -> Int -> [Int] -> Table
+mergeTable [] maxIndex keeps         = []
+mergeTable (row:rows) maxIndex keeps = (mergeRow row maxIndex keeps) : (mergeTable rows maxIndex keeps)
+
+-- mergeRow
+        -- @brief:
+        -- @params: 
+        -- @return:
+mergeRow :: Row -> Int -> [Int] -> Row
+mergeRow row maxIndex keeps = mergeRowAux row maxIndex keeps 0
+
+-- mergeRowAux
+        -- @brief:
+        -- @params: 
+        -- @return:
+mergeRowAux :: Row -> Int -> [Int] -> Int -> Row
+mergeRowAux [] maxIndex keeps index           = []
+mergeRowAux (cell:cells) maxIndex keeps index | (contains index keeps) = cell : (mergeRowAux cells maxIndex keeps (index+1))
+                                              | index > maxIndex = []
+                                              | cell == "" = rightCell : (mergeRowAux cells maxIndex keeps (index+1))
+                                              | otherwise = cell : (mergeRowAux cells maxIndex keeps (index+1))
+        where
+                rightCell = (cells!!(maxIndex))
+                                     
 
 --------------------
 -- HELPER METHODS -- 
@@ -1314,8 +1360,8 @@ isValidTablePredicate (Comparison tableComparison) ltable rtable = isValidTableC
 isValidTableComparison :: TableComparison -> Table -> Table -> Bool
 isValidTableComparison (TableComparison lcol operator rcol) ltable rtable = and [(validLCol),(validRCol)]
         where
-                validLCol = lcol < length ltable
-                validRCol = rcol < length rtable
+                validLCol = lcol < getTableWidth ltable
+                validRCol = rcol < getTableWidth rtable
 
 
 
