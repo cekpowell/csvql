@@ -232,20 +232,6 @@ FormatFunction: Order In Direction TableType                    { OrderBy $3 $4 
 Direction : Asc  { Asc }
           | Desc { Desc }
 
------------
--- LISTS --
------------ 
-
-List (a)     : '[' ']'              { [] }
-             | '[' ListCont (a) ']' { $2 }
-ListCont (a) : a                    { [$1] }
-             | a ',' ListCont (a)   { [$1] ++ $3 }
-
-CurlyList (a)     : '{' '}'                   { [] }
-                  | '{' CurlyListCont (a) '}' { $2 }
-CurlyListCont (a) : a                         { [$1] }
-                  | a ',' CurlyListCont (a)   { [$1] ++ $3 }
-
 ----------------
 -- PREDICATES --
 ----------------
@@ -288,6 +274,21 @@ Operator : '+' { Add }
          | "/" { Divide }
          | '*' { Multiply }
          | '%' { Modulo }
+
+
+-----------
+-- LISTS --
+----------- 
+
+List (a)     : '[' ']'              { [] }
+             | '[' ListCont (a) ']' { $2 }
+ListCont (a) : a                    { [$1] }
+             | a ',' ListCont (a)   { [$1] ++ $3 }
+
+CurlyList (a)     : '{' '}'                   { [] }
+                  | '{' CurlyListCont (a) '}' { $2 }
+CurlyListCont (a) : a                         { [$1] }
+                  | a ',' CurlyListCont (a)   { [$1] ++ $3 }
 
 
 

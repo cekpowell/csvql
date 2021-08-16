@@ -1,104 +1,12 @@
+SETUP{
+    PRETTYPRINT
+}
 
+LET a = READ "A.csv";
 
--- Problem 1 -- 
+LET selectedTable = SELECT [@0, @1, @2, @3] WHERE [@1 == "2"] FROM a;
 
-    -- LET a = READ "A.CSV";
-    -- LET b = READ "B.CSV";
-
-    -- LET joinedTable = JOIN FULL ON a AND b;
-
-    -- RETURN ORDER IN ASC joinedTable;
-
-    -- input 1:  PASS 
-    -- input 2:  PASS
-    -- input 3:  PASS 
-    -- input 4:  PASS
-    -- input 5:  PASS
-    -- input 6:  PASS
-    -- input 7:  PASS
-    -- input 8:  PASS
-    -- input 9:  PASS
-    -- input 10: PASS
-    -- input 11: PASS
-    -- input 12: PASS
-    -- input 13: PASS
-    -- input 14: PASS
-    -- input 15: PASS
-
--- Problem 2 -- 
-
-    -- LET a = READ "A.CSV";
-
-    -- LET selectedTable = SELECT [@2, @1] WHERE [@0 == @1] FROM a;
-    
-    -- RETURN ORDER IN ASC selectedTable;
-
-    -- input 1: PASS
-    -- input 2: PASS
-    -- input 3: PASS
-    -- input 4: PASS
-    -- input 5: PASS
-    -- input 6: PASS
-    -- input 7: PASS
-    -- input 8: PASS
-    -- input 9: PASS
-    -- input 10: PASS
-
--- Problem 3 -- 
-
-    LET p = READ "P.csv";
-    LET q = READ "Q.csv";
-
-    LET mergedTables = MERGE WHERE [LEFT.@0 == RIGHT.@0] KEEPING [@0] ON p AND q;
-
-    RETURN ORDER IN ASC mergedTables;
-
-    -- input 1: PASS
-    -- input 2: PASS
-    -- input 3: PASS
-    -- input 4: PASS
-    -- input 5: PASS
-    -- input 6: PASS
-    -- input 7: PASS
-    -- input 8: PASS
-    -- input 9: PASS
-    -- input 10: PASS
-
--- Problem 4 -- 
-
-    -- LET a = READ "A.csv";
-
-    -- LET selectedTable = SELECT [@0,@1] WHERE [@1 != ""] FROM a;
-
-    -- RETURN ORDER IN ASC selectedTable;
-
-    -- input 1: PASS
-    -- input 2: PASS
-    -- input 3: PASS
-    -- input 4: PASS
-    -- input 5: PASS
-    -- input 6: PASS
-    -- input 7: PASS
-    -- input 8: PASS
-
--- Problem 5 -- 
-
-    -- LET a = READ "A.csv";
-
-    -- LET joinedTable = JOIN ON a AND a;
-    -- LET extraColumn = INSERT COLUMN @1 INTO joinedTable;
-    -- LET updatedColumn = UPDATE TO [@1 = "0"] ON extraColumn;
-
-    -- RETURN ORDER IN ASC updatedColumn;
-
-    -- input 1: PASS
-    -- input 2: PASS
-    -- input 3: PASS
-    -- input 4: PASS
-    -- input 5: PASS
-    -- input 6: PASS
-    -- input 7: PASS
-
+RETURN selectedTable;
 
 
 

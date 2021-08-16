@@ -1,0 +1,5 @@
+SETUP {
+    PRETTYPRINT
+}
+
+RETURN SELECT * WHERE [@1 == "2"] FROM (READ "A.csv");

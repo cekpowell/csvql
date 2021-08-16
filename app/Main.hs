@@ -12,10 +12,6 @@ import System.IO
 import Data.List
 import Data.Char (isSpace) 
 
--- ADDITIONAL DEPENDENCIES 
-        -- Data.List.Split
-        -- "array" in CQLanguage.cabal (not sure what it's used for?)
-
 -----------------------
 -- TYPE DECLERATIONS -- 
 -----------------------
