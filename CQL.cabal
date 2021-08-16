@@ -25,8 +25,13 @@ source-repository head
 
 library
   exposed-modules:
+      ErrorHandler
+      Evaluator
       Grammar
+      Helper
+      TablePrinter
       Tokens
+      Types
   other-modules:
       Paths_CQL
   hs-source-dirs:
@@ -34,6 +39,7 @@ library
   build-depends:
       array
     , base >=4.7 && <5
+    , split
   default-language: Haskell2010
 
 executable CQL-exe
@@ -47,6 +53,7 @@ executable CQL-exe
       CQL
     , array
     , base >=4.7 && <5
+    , split
   default-language: Haskell2010
 
 test-suite CQL-test
@@ -61,4 +68,5 @@ test-suite CQL-test
       CQL
     , array
     , base >=4.7 && <5
+    , split
   default-language: Haskell2010

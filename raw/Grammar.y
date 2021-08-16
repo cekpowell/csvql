@@ -26,6 +26,7 @@ import Tokens
 
     Setup        { TokenSetup _ }
     PrettyPrint  { TokenPrettyPrint _ }
+    LoadFromTsv  { TokenLoadFromTsv _ }
     Read         { TokenRead _ } 
     Let          { TokenLet _ }
     Return       { TokenReturn _ }
@@ -151,6 +152,7 @@ Program : Setup CurlyList(Configuration) Exp { SetupProgram $2 $3}
         | Exp                                { Program $1 }
 
 Configuration : PrettyPrint { PrettyPrint }
+              | LoadFromTsv { LoadFromTsv }
 
 Exp : Let Var '=' TableType ';' Exp { Let $2 $4 $6 }
     | Return TableType ';'          { Return $2 }
@@ -304,14 +306,15 @@ CurlyListCont (a) : a                         { [$1] }
 
 { 
 parseError :: [Token] -> a
-parseError [] = error "Unknown parse error"
-parseError (t:ts) = error ("Error at line:column  " ++ (tokenPosn t))
+parseError [] = error "Unknown parse error in program.@" -- need '@' in order to remove stacktrace from error call.
+parseError (t:ts) = error ("Parse error in program at line:column  " ++ (tokenPosn t) ++ ".@")
 
 data Program = SetupProgram [Configuration] Exp
              | Program Exp
                deriving (Show, Eq)
 
 data Configuration = PrettyPrint
+                   | LoadFromTsv
                      deriving (Show, Eq)
 
 data Exp = Let String TableType Exp

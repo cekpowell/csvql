@@ -36,6 +36,7 @@ tokens :-
 
   SETUP         { \p s -> TokenSetup p }
   PRETTYPRINT   { \p s -> TokenPrettyPrint p }
+  LOADFROMTSV   { \p s -> TokenLoadFromTsv p }
   READ          { \p s -> TokenRead p } 
   LET           { \p s -> TokenLet p }
   RETURN        { \p s -> TokenReturn p }
@@ -154,6 +155,7 @@ data Token =
 
                 TokenSetup AlexPosn
               | TokenPrettyPrint AlexPosn
+              | TokenLoadFromTsv AlexPosn
               | TokenRead AlexPosn 
               | TokenLet AlexPosn
               | TokenReturn AlexPosn
@@ -296,6 +298,7 @@ tokenPosn :: Token -> String
 
 tokenPosn (TokenSetup (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenPrettyPrint (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenLoadFromTsv (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenRead (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLet (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenReturn (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
