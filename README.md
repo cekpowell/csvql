@@ -12,8 +12,8 @@
 
 #### Language Definition
 
-- The programming language developed is known as **Choran**, and is heavily influenced by **SQL**.
-- A detailed description of the Choran programming language (*including syntax, grammar, language semantics, execution model and example programs*) is provided in `Documentation.pdf`. 
+- The programming language developed is known as **CSVQL**, and is heavily influenced by **SQL**.
+- A detailed description of the CSVQL programming language (*including syntax, grammar, language semantics, execution model and example programs*) is provided in `Documentation.pdf`. 
 
 ---
 
@@ -41,7 +41,7 @@
     ./csvql <program name>
     ```
 
-  - Where `program name` is the name of the file containing the program written in the programming langauge.
+  - Where `program name` is the name of the file containing the program written in the CSVQL programming langauge.
 
 - The result of the program will be outputted to the terminal.
 
