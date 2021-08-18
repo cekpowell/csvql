@@ -4,20 +4,20 @@
 
 ---
 
-### Project Overview
+## Introduction
 
-#### Task Description
+### Task Description
 
 - Design a programming langauage that supports the querying of CSV text files, and write an interpreter that is able to execute programs written in this language, using **Haskell**.
 
-#### Language Definition
+### Language Definition
 
 - The programming language developed is known as **CSVQL**, and is heavily influenced by **SQL**.
 - A detailed description of the CSVQL programming language (*including syntax, grammar, language semantics, execution model and example programs*) is provided in `Documentation.pdf`. 
 
 ---
 
-### Running The Application
+## Running The Application
 
 - Running the application involves passing an input program into the interpreter for it to execute.
 
@@ -37,7 +37,7 @@
 
 ---
 
-### Compilation Guide
+## Compilation Guide
 
 - The provided `csvql.cabal` file can be used for compilation of the CSVQL interpreter.
 
