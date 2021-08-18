@@ -23,16 +23,6 @@
 
 - The interpreter is pre-compiled as a program called `csvql`, and can be found in the `build` directory of the repo.
 
-- If the interpreter is not working correctly, try re-building it with the following command:
-
-  - ```bash
-    cabal build
-    ```
-
-  - This will create a new directory called `dist-newstyle` and place the `csvql` interpreter program inside it.
-
-    - Path to the executable: `dist-newstyle/build/x86_64-osx/ghc-8.4.3/csvql-0.1.0.0/x/csvql/build/csvql`
-
 - Write a program using the programming-langauge (see `Documentation`) and save it into a plain text file (*file extension is not important*) in the same directory as the language interpreter - make sure any files (i.e., `.csv` files) are also in the same directory.
 
 - **Execute** the written program with the following command:
