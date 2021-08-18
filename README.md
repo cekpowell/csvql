@@ -47,6 +47,6 @@
 cabal build
 ```
 
-- This will create a new directory called `dist-newstyle` and place the `csvql` interpreter program inside it.
+- This will create a new directory called `dist-newstyle` and place the compiled `csvql` interpreter inside it.
 
   - Path to the executable: `dist-newstyle/build/x86_64-osx/ghc-8.4.3/csvql-0.1.0.0/x/csvql/build/csvql`
