@@ -37,3 +37,16 @@
 
 ---
 
+### Compilation Guide
+
+- The provided `csvql.cabal` file can be used for compilation of the CSVQL interpreter.
+
+- Use the following command to compile the interpreter:
+
+```bash
+cabal build
+```
+
+- This will create a new directory called `dist-newstyle` and place the `csvql` interpreter program inside it.
+
+  - Path to the executable: `dist-newstyle/build/x86_64-osx/ghc-8.4.3/csvql-0.1.0.0/x/csvql/build/csvql`
