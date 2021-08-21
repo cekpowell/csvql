@@ -88,16 +88,48 @@ getTableFromType (Function functionTable) vars config = do
         -- @params: 
         -- @return:
 getTableFromFile :: String -> [Configuration] -> IO Table
-getTableFromFile filename config = do 
-                                        content <- myReadFile filename 
-                                        if content == "error" then
-                                                do
-                                                        error ("No such table '" ++ filename ++ "' exists.@")
-                                        else
-                                                do
-                                                        let rows = lines content
-                                                        let table = getTableFromLines rows config
-                                                        return table
+getTableFromFile filename config = if contains LoadFromTsv config then
+                                        getTableFromTsvFile filename config
+                                   else
+                                        getTableFromCsvFile filename config
+                                
+-- getTableFromCsvFile
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromCsvFile :: String -> [Configuration] -> IO Table
+getTableFromCsvFile filename config = if stringEndsWith ".csv" filename then
+                                        do
+                                                content <- myReadFile filename 
+                                                if content == "error" then
+                                                        do
+                                                                error ("No such table '" ++ filename ++ "' exists.@")
+                                                else
+                                                        do
+                                                                let rows = lines content
+                                                                let table = getTableFromLines rows config
+                                                                return table
+                                      else
+                                        error ("The TSV file '" ++ filename ++ "' cannot be loaded in CSV mode.@")
+
+-- getTableFromTsvFile
+        -- @brief:
+        -- @params: 
+        -- @return:                  
+getTableFromTsvFile :: String -> [Configuration] -> IO Table
+getTableFromTsvFile filename config = if stringEndsWith ".tsv" filename then
+                                        do
+                                                content <- myReadFile filename 
+                                                if content == "error" then
+                                                        do
+                                                                error ("No such table '" ++ filename ++ "' exists.@")
+                                                else
+                                                        do
+                                                                let rows = lines content
+                                                                let table = getTableFromLines rows config
+                                                                return table
+                                      else
+                                        error ("The CSV file '" ++ filename ++ "' cannot be loaded in TSV mode.@")      
 
 
 --------------------

@@ -155,3 +155,21 @@ contains :: Eq a => a -> [a] -> Bool
 contains val [] = False
 contains val (x:xs) | x == val  = True
                     | otherwise = contains val xs
+
+-- stringEndsWith
+        -- @brief:
+        -- @params: 
+        -- @return:
+stringEndsWith :: String -> String -> Bool
+stringEndsWith end string = stringStartsWith (reverse end) (reverse string)
+
+-- stringStartsWith
+        -- @brief:
+        -- @params: 
+        -- @return:
+stringStartsWith :: String -> String -> Bool
+stringStartsWith [] []         = True
+stringStartsWith start []      = False
+stringStartsWith [] string          = True
+stringStartsWith (x:xs) (s:ss) | x == s    = stringStartsWith xs ss
+                               | otherwise = False

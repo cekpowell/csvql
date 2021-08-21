@@ -407,7 +407,7 @@ alexScanTokens str0 = go (alexStartPos,'\n',[],str0)
   where go inp__@(pos,_,_,str) =
           case alexScan inp__ 0 of
                 AlexEOF -> []
-                AlexError ((AlexPn _ line column),_,_,_) -> error $ "lexical error at line " ++ (show line) ++ ", column " ++ (show column)
+                AlexError ((AlexPn _ line column),_,_,_) -> error $ "lexical error at line " ++ (show line) ++ ", column " ++ (show column) ++ "@."
                 AlexSkip  inp__' _ln     -> go inp__'
                 AlexToken inp__' len act -> act pos (take len str) : go inp__'
 
