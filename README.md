@@ -39,7 +39,7 @@
 
 ## Compilation Guide
 
-- The provided `csvql.cabal` file can be used for compilation of the CSVQL interpreter.
+- The provided `csvql.cabal` file can be used with the `cabal` framework for compilation of the CSVQL interpreter.
 
 - Use the following command to compile the interpreter:
 
@@ -50,3 +50,12 @@ cabal build
 - This will create a new directory called `dist-newstyle` and place the compiled `csvql` interpreter inside it.
 
   - Path to the executable: `dist-newstyle/build/x86_64-osx/ghc-8.4.3/csvql-0.1.0.0/x/csvql/build/csvql`
+
+- `cabal` can also be used to run the compiled interpreter with the following command:
+
+```bash
+cabal run csvql <programName>
+```
+- Where:
+  - `programName` is the name of the CSVQL program being executed.
+- Note however that using the `cabal run` command will output the version status of `cabal` (e.g., `Up To Date`) before outputting the result of the execution.
