@@ -40,7 +40,7 @@ printResult filename table config = do
                                                 then prettyPrint filename table
                                         -- Performing normal print if no PrettyPrint configuration
                                         else 
-                                                normalPrintTable table
+                                                normalPrintTable table config
 
 
 
@@ -60,30 +60,34 @@ printResult filename table config = do
         -- @brief:
         -- @params: 
         -- @return:
-normalPrintTable :: Table -> IO ()
-normalPrintTable []     = return () -- If there is no table, what needs to happen??
-normalPrintTable (r:rs) = do 
-                                printRow r
-                                hPutStrLn stdout ""
-                                normalPrintTable rs 
+normalPrintTable :: Table -> [Configuration] -> IO ()
+normalPrintTable table config = printLines lines
+        where
+                lines = getLinesFromTable table config
 
-------------------
--- PRINTING ROW --
-------------------
 
--- printRow
+-------------------------------
+-- CONVERTING TABLE TO LINES --
+-------------------------------
+
+-- getLinesFromTable
         -- @brief:
         -- @params: 
         -- @return:
-printRow :: Row -> IO ()
-printRow [] = return ()
-printRow (cell:cells) | cells == [] = do 
-                                         hPutStr stdout cell
-                                         printRow cells
-                      | otherwise   = do 
-                                         hPutStr stdout cell
-                                         hPutStr stdout ","
-                                         printRow cells
+getLinesFromTable :: Table -> [Configuration] -> [String]
+getLinesFromTable [] config         = []
+getLinesFromTable (row:rows) config = newRow : (getLinesFromTable rows config)
+        where
+                newRow = intercalate delim row
+                delim = if (hasOutputDelim config) then
+                                getOutputDelim config
+                            else 
+                                ","
+
+
+--------------------
+-- PRINTING LINES --
+--------------------
 
 -- printLines
         -- @brief:

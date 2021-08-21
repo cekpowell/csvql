@@ -62,7 +62,7 @@ cabal run csvql <programName>
 
 --- 
 
-## Editing Grammar
+## Editing Grammar and Syntax
 
 - TODO
 

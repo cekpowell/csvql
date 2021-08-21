@@ -88,10 +88,16 @@ getTableFromType (Function functionTable) vars config = do
         -- @params: 
         -- @return:
 getTableFromFile :: String -> [Configuration] -> IO Table
-getTableFromFile filename config = if contains LoadFromTsv config then
-                                        getTableFromTsvFile filename config
-                                   else
-                                        getTableFromCsvFile filename config
+getTableFromFile filename config = do
+                                        content <- myReadFile filename 
+                                        if content == "error" then
+                                                do
+                                                        error ("No such table '" ++ filename ++ "' exists.@")
+                                        else
+                                                do
+                                                        let rows = lines content
+                                                        let table = getTableFromLines rows config
+                                                        return table
                                 
 -- getTableFromCsvFile
         -- @brief:

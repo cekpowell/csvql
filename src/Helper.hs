@@ -27,6 +27,12 @@ import Types
 -- ================================================================================ --
 
 
+
+
+-----------------------------
+-- READING TABLE FROM FILE -- 
+-----------------------------
+
 -- myReadFile
         -- @brief:
         -- @params: 
@@ -38,6 +44,61 @@ myReadFile file = do
                                 Left except -> return "error"
                                 Right contents -> return contents
 
+-- getTableFromLines
+        -- @brief:
+        -- @params: 
+        -- @return:
+getTableFromLines :: [String] -> [Configuration] -> Table
+getTableFromLines [] config         = []
+getTableFromLines (row:rows) config = cells : (getTableFromLines rows config)
+        where
+                cells = splitOn delim row
+                delim = if (hasInputDelim config) then
+                                getInputDelim config
+                            else 
+                                ","
+
+-- hasInputDelim
+        -- @brief:
+        -- @params: 
+        -- @return:
+hasInputDelim :: [Configuration] -> Bool
+hasInputDelim []                        = False
+hasInputDelim ((InputDelim del):cs) = True
+hasInputDelim (c:cs)                    = hasInputDelim cs
+
+-- getInputDelim
+        -- @brief:
+        -- @params: 
+        -- @return:
+getInputDelim :: [Configuration] -> String
+getInputDelim []                        = error "No output delimiter configuration provided.@"
+getInputDelim ((InputDelim ""):cs)  = error "The input delimiter cannot not be null.@"
+getInputDelim ((InputDelim del):cs) = del
+getInputDelim (c:cs)                    = getInputDelim cs
+
+-- hasOutputDelim
+        -- @brief:
+        -- @params: 
+        -- @return:
+hasOutputDelim :: [Configuration] -> Bool
+hasOutputDelim []                         = False
+hasOutputDelim ((OutputDelim del):cs) = True
+hasOutputDelim (c:cs)                     = hasOutputDelim cs
+
+-- getOutputDelim
+        -- @brief:
+        -- @params: 
+        -- @return:
+getOutputDelim :: [Configuration] -> String
+getOutputDelim []                         = error "No output delimiter configuration provided.@"
+getOutputDelim ((OutputDelim ""):cs)  = error "The output delimiter cannot not be null.@"
+getOutputDelim ((OutputDelim del):cs) = del
+getOutputDelim (c:cs)                     = getOutputDelim cs
+
+----------------------
+-- FORMATTING TABLE --
+---------------------- 
 
 -- formatTable
         -- @brief:
@@ -71,6 +132,10 @@ trimCell :: String -> String
 trimCell = f . f
    where f = reverse . dropWhile isSpace
 
+------------------------
+-- UPDATING VARIABLES --
+------------------------ 
+
 -- updateVars
         -- @brief:
         -- @params: 
@@ -80,19 +145,9 @@ updateVars newVar [] = [newVar]
 updateVars (name, table) ((varName,varTable):varsToGo) | name == varName = [(name, table)] ++ varsToGo
                                                        | otherwise = [(varName,varTable)] ++ (updateVars (name,table) varsToGo)
 
--- getTableFromLines
-        -- @brief:
-        -- @params: 
-        -- @return:
-getTableFromLines :: [String] -> [Configuration] -> Table
-getTableFromLines [] config         = []
-getTableFromLines (row:rows) config = cells : (getTableFromLines rows config)
-        where
-                cells = splitOn delimiter row
-                delimiter = if (contains LoadFromTsv config) then
-                                 "   " -- tab taken to be 3 spaces as cannot split on "\t"
-                             else
-                                 ","
+------------------
+-- MISC METHODS -- 
+------------------
 
 -- getCellFromTable
         -- @brief:
@@ -100,16 +155,6 @@ getTableFromLines (row:rows) config = cells : (getTableFromLines rows config)
         -- @return:
 getCellFromTable :: Table -> Int -> Int -> Cell
 getCellFromTable table row col = table!!row!!col
-
--- getLinesFromTable
-        -- @brief:
-        -- @params: 
-        -- @return:
-getLinesFromTable :: Table -> [String]
-getLinesFromTable []         = []
-getLinesFromTable (row:rows) = newRow : (getLinesFromTable rows)
-        where
-                newRow = intercalate "," row
 
 -- getTableWidth
         -- @brief:

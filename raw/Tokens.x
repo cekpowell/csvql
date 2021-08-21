@@ -36,7 +36,8 @@ tokens :-
 
   SETUP         { \p s -> TokenSetup p }
   PRETTYPRINT   { \p s -> TokenPrettyPrint p }
-  LOADFROMTSV   { \p s -> TokenLoadFromTsv p }
+  INPUTDELIM    { \p s -> TokenInputDelim p }
+  OUTPUTDELIM   { \p s -> TokenOutputDelim p }
   READ          { \p s -> TokenRead p } 
   LET           { \p s -> TokenLet p }
   RETURN        { \p s -> TokenReturn p }
@@ -130,10 +131,10 @@ tokens :-
   -- PATTERNS --
   --------------
 
-  [$digit]+                                                          { \p s -> TokenInt p (read s)}
-  \"[$alpha $white \_ \' $digit]* \. [$alpha $white \_ \' $digit]*\" { \p s -> TokenFilename p (read s) }
-  \"[$alpha $white \_ \' $digit]*\"                                  { \p s -> TokenStr p (read s) }
-  $alpha [$alpha \_ $digit]*                                         { \p s -> TokenVar p s }
+  [$digit]+                                                                                           { \p s -> TokenInt p (read s)}
+  \"[$alpha $white \_ \' $digit]* \. [$alpha $white \_ \' $digit]*\"                                  { \p s -> TokenFilename p (read s) }
+  \"[$alpha $white \_ \' \- \, \. \? \[ \] \( \) \! \@ \£ \$ \% \^ \& \* \+ \+ \{ \} \` \~ $digit]*\" { \p s -> TokenStr p (read s) }
+  $alpha [$alpha \_ $digit]*                                                                          { \p s -> TokenVar p s }
 
 
 
@@ -155,7 +156,8 @@ data Token =
 
                 TokenSetup AlexPosn
               | TokenPrettyPrint AlexPosn
-              | TokenLoadFromTsv AlexPosn
+              | TokenInputDelim AlexPosn
+              | TokenOutputDelim AlexPosn
               | TokenRead AlexPosn 
               | TokenLet AlexPosn
               | TokenReturn AlexPosn
@@ -298,7 +300,8 @@ tokenPosn :: Token -> String
 
 tokenPosn (TokenSetup (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenPrettyPrint (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
-tokenPosn (TokenLoadFromTsv (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenInputDelim (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenOutputDelim (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenRead (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLet (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenReturn (AlexPn a l c)) = show(l) ++ ":" ++ show(c)

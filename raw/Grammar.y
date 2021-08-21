@@ -26,7 +26,8 @@ import Tokens
 
     Setup        { TokenSetup _ }
     PrettyPrint  { TokenPrettyPrint _ }
-    LoadFromTsv  { TokenLoadFromTsv _ }
+    InputDelim   { TokenInputDelim _ }
+    OutputDelim  { TokenOutputDelim _ }
     Read         { TokenRead _ } 
     Let          { TokenLet _ }
     Return       { TokenReturn _ }
@@ -151,8 +152,9 @@ import Tokens
 Program : Setup CurlyList(Configuration) Exp { SetupProgram $2 $3}
         | Exp                                { Program $1 }
 
-Configuration : PrettyPrint { PrettyPrint }
-              | LoadFromTsv { LoadFromTsv }
+Configuration : PrettyPrint     { PrettyPrint }
+              | InputDelim Str  { InputDelim $2 }
+              | OutputDelim Str { OutputDelim $2 }
 
 Exp : Let Var '=' TableType ';' Exp { Let $2 $4 $6 }
     | Return TableType ';'          { Return $2 }
@@ -314,7 +316,8 @@ data Program = SetupProgram [Configuration] Exp
                deriving (Show, Eq)
 
 data Configuration = PrettyPrint
-                   | LoadFromTsv
+                   | InputDelim String
+                   | OutputDelim String
                      deriving (Show, Eq)
 
 data Exp = Let String TableType Exp
