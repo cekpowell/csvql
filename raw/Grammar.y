@@ -152,9 +152,9 @@ import Tokens
 Program : Setup CurlyList(Configuration) Exp { SetupProgram $2 $3}
         | Exp                                { Program $1 }
 
-Configuration : PrettyPrint     { PrettyPrint }
-              | InputDelim Str  { InputDelim $2 }
-              | OutputDelim Str { OutputDelim $2 }
+Configuration : PrettyPrint         { PrettyPrint }
+              | InputDelim  '=' Str { InputDelim $3 }
+              | OutputDelim '=' Str { OutputDelim $3 }
 
 Exp : Let Var '=' TableType ';' Exp { Let $2 $4 $6 }
     | Return TableType ';'          { Return $2 }

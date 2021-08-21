@@ -35,7 +35,7 @@
 
 - The result of the program will be outputted to the terminal.
 
-- ***Note***: Contained within `/build` is a version of the interpreter (`csvql-no-color`) that will output results of CSVQL with no additional colours (which the standard interpreter will do).
+- ***Note***: Some text output from the interpreter is displayed in different colours (e.g., red for error messages). Contained within `/build` is a version of the interpreter (`csvql-no-color`) that will output results with no such colour formatting applied to the text.
 
 ---
 
