@@ -62,8 +62,22 @@ cabal run csvql <programName>
 
 --- 
 
-## Editing Grammar and Syntax
+## Editing Lexer and Parser (Syntax and Grammer)
 
-- TODO
+- The Haskell tools `Alex` and `Happy` were used to create the interpreter's lexer and parser respectively.
+- The configuration files used for these tools can be found within `/raw`.
+  - `Tokens.x` is the configuration file for `Alex`.
+  - `Grammar.y` is the configuration file for `Happy`.
+- `Tokens.x` can be re-compiled with:
+```bash
+alex Tokens.x
+```
+  - This will produce a Haskell file `Tokens.hs`.
+- `Grammar.y` can be re-compiled with:
+```bash
+alex Grammar.y
+```
+  - This will produce a Haskell file `Grammar.hs`.
+  - In order to compile `Grammar.y`, the `Tokens.hs` file must be present.
 
 ---
