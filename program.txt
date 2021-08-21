@@ -1,0 +1,5 @@
+SETUP {
+    PRETTYPRINT
+}
+
+RETURN READ "test2.csv";

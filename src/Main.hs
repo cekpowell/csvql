@@ -19,6 +19,7 @@ import Types
 import Evaluator
 import TablePrinter
 import ErrorHandler
+import Helper
 
 
 
@@ -46,22 +47,26 @@ main = catch mainAux executionError
 mainAux :: IO ()
 mainAux = do 
              -- Loading Program -- 
-             (filename : _ ) <- getArgs -- name of program being run
-             sourceText <- readFile filename -- reading in the program
-                
-             -- Lexing and Parsing -- 
-             let tokens = alexScanTokens sourceText -- lexing the program (converting into tokens)
-             let program = parseCalc tokens -- parsing the program (converting into Haskell objects)
+             (programName : _ ) <- getArgs -- name of program being run
+             sourceText <- myReadFile programName -- reading in the program
 
-             -- Gathering Configuration + Expression -- 
-             let config = getConfiguration program
-             let exp = getExp program
+             if sourceText == "error" then
+                     error ("No such program '" ++ programName ++ "' exists.@")
+             else
+                     do
+                        -- Lexing and Parsing -- 
+                        let tokens = alexScanTokens sourceText -- lexing the program (converting into tokens)
+                        let program = parseCalc tokens -- parsing the program (converting into Haskell objects)
 
-             -- Evaluating Program -- 
-             result <- eval exp [] config
+                        -- Gathering Configuration + Expression -- 
+                        let config = getConfiguration program
+                        let exp = getExp program
 
-            -- Outputting Result -- 
-             printResult filename result config
+                        -- Evaluating Program -- 
+                        result <- eval exp [] config
+
+                        -- Outputting Result -- 
+                        printResult programName result config
 
 
 -- getConfiguration 

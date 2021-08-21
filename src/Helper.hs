@@ -27,6 +27,16 @@ import Types
 -- ================================================================================ --
 
 
+-- myReadFile
+        -- @brief:
+        -- @params: 
+        -- @return:
+myReadFile :: String -> IO String
+myReadFile file = do
+                        strOrExc <- try $ readFile file :: IO (Either SomeException String)
+                        case strOrExc of
+                                Left except -> return "error"
+                                Right contents -> return contents
 
 
 -- formatTable

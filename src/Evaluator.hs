@@ -89,10 +89,16 @@ getTableFromType (Function functionTable) vars config = do
         -- @return:
 getTableFromFile :: String -> [Configuration] -> IO Table
 getTableFromFile filename config = do 
-                                        content <- readFile filename 
-                                        let rows = lines content
-                                        let table = getTableFromLines rows config
-                                        return table
+                                        content <- myReadFile filename 
+                                        if content == "error" then
+                                                do
+                                                        error ("No such table '" ++ filename ++ "' exists.@")
+                                        else
+                                                do
+                                                        let rows = lines content
+                                                        let table = getTableFromLines rows config
+                                                        return table
+
 
 --------------------
 -- TABLE FROM VAR -- 

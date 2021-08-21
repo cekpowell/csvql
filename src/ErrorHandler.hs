@@ -27,6 +27,8 @@ import Helper
 -- ================================================================================ --
 
 
+
+
 -- executionError 
         -- @brief:
         -- @params: 
@@ -35,7 +37,8 @@ executionError :: ErrorCall -> IO ()
 executionError e = do 
                       let err = show e
                       let msg = (splitOn "@" err)!!0 -- dodgy code but it will do. Wanted to seperate the error message away from the error object, so put a '@' at the end of every error message. Can then get just the message by splitting it based on the '@' delimiter. Otherwise, it prints out the stack trace which is not good.
-                      hPutStrLn stderr ("\x1b[31m" ++ "### EXECUTION ERROR ### : " ++ msg ++ "\x1b[0m")
+                      -- hPutStrLn stderr ("\x1b[31m" ++ "### EXECUTION ERROR ### : " ++ msg ++ "\x1b[0m")
+                      hPutStrLn stderr ("### EXECUTION ERROR ### : " ++ msg)
                       pure ()
 
 

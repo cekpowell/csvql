@@ -29,6 +29,7 @@ import Helper
 
 
 
+
 -- printResult
         -- @brief:
         -- @params: 
@@ -119,10 +120,12 @@ printLines (l:ls) = do
 prettyPrint :: String -> Table -> IO ()
 prettyPrint filename result = do
                                  hPutStrLn stdout ("\n")
-                                 hPutStrLn stdout (runningProgramColour)
+                                 --hPutStrLn stdout (runningProgramColour)
+                                 hPutStrLn stdout (runningProgram)
                                  hPutStrLn stdout ("\n")
 
-                                 hPutStrLn stdout (programOutputColour)
+                                 --hPutStrLn stdout (programOutputColour)
+                                 hPutStrLn stdout (programOutput)
                                  hPutStrLn stdout ("\n")
                                  prettyPrintTable result
                                  hPutStrLn stdout ("\n")
@@ -145,18 +148,22 @@ prettyPrint filename result = do
         -- @return:
 prettyPrintTable :: Table -> IO ()
 --prettyPrintTable []    = prettyPrintTable [[""]] -- empty table, so printing a one by one table
-prettyPrintTable [[]]  = hPutStrLn stdout colouredEmpty -- printint "EMPTY" if the table is empty
+prettyPrintTable [[]]  = do
+                                --hPutStrLn stdout colouredEmpty -- printint "EMPTY" if the table is empty
+                                hPutStrLn stdout empty
         where
-                colouredEmpty = "\t" ++ redColour ++ "EMPTY" ++ baseColour
-                redColour = "\x1b[31m"
-                baseColour = "\x1b[0m"
+                colouredEmpty = "\t" ++ redColour ++ empty ++ baseColour
+                empty         = "EMPTY"
+                redColour     = "\x1b[31m"
+                baseColour    = "\x1b[0m"
 prettyPrintTable table = do
                             let rowLabelledTable = getRowLabelledTable table 0 -- 0 is the index of the current row, which starts at 0
                             let columnLabels = getColumnLabels ((getTableWidth rowLabelledTable) - 2)
                             let columnRowLabelledTable = ("" : columnLabels) : rowLabelledTable
                             let widths = getColumnWidths (transpose columnRowLabelledTable)   
                             let colouredTable = colourTable columnRowLabelledTable                             
-                            prettyPrintTableAux colouredTable widths 
+                            --prettyPrintTableAux colouredTable widths 
+                            prettyPrintTableAux columnRowLabelledTable widths
 
 -- prettyPrintTableAux
         -- @brief:
@@ -167,7 +174,8 @@ prettyPrintTableAux [] widths = return ()
 prettyPrintTableAux (row:rows) widths = do 
                                            prettyPrintRow row widths 0 -- 0 is the index of the current column, which starts at 0
 
-                                           hPutStrLn stdout ("\t" ++ colouredHSeperator)
+                                           -- hPutStrLn stdout ("\t" ++ colouredHSeperator)
+                                           hPutStrLn stdout ("\t" ++ hSeperator)
 
                                            prettyPrintTableAux rows widths
         where   
@@ -190,15 +198,18 @@ prettyPrintTableAux (row:rows) widths = do
         -- @return:
 prettyPrintRow :: Row -> [Int] -> Int -> IO ()
 prettyPrintRow (cell:cells) widths currentCol | cells == []     = do 
-                                                                     hPutStr stdout colouredVSeperator
+                                                                     -- hPutStr stdout colouredVSeperator
+                                                                     hPutStr stdout vSeperator
                                                                      prettyPrintCell cell (widths!!currentCol)
-                                                                     hPutStrLn stdout colouredVSeperator -- printing seperator onto a new line as this is the final cell
+                                                                     -- hPutStrLn stdout colouredVSeperator -- printing seperator onto a new line as this is the final cell
+                                                                     hPutStrLn stdout vSeperator
                                               | currentCol == 0 = do 
                                                                      hPutStr stdout "\t" -- first cell is the row label, so need to tab and not provide seperator
                                                                      prettyPrintCell cell (widths!!currentCol)
                                                                      prettyPrintRow cells widths (currentCol + 1)
                                               | otherwise       = do 
-                                                                     hPutStr stdout colouredVSeperator
+                                                                     -- hPutStr stdout colouredVSeperator
+                                                                     hPutStr stdout vSeperator
                                                                      prettyPrintCell cell (widths!!currentCol)
                                                                      prettyPrintRow cells widths (currentCol + 1)
         where
@@ -222,7 +233,8 @@ prettyPrintCell cell width | cellLength < width = hPutStr stdout formattedCell -
                 formattedCell = concat (cell : extraSpaces)
                 extraSpaces   = replicate (neededSpaces) " "
                 neededSpaces  = width - cellLength
-                cellLength    = length cell - 5 -- (-5) as taking into account the colour that has been added to each cell (which is 5 characters long after ignoring excaped characters?)
+                --cellLength    = length cell - 5 -- (-5) as taking into account the colour that has been added to each cell (which is 5 characters long after ignoring excaped characters?)
+                cellLength    = length cell
 
 --------------------
 -- HELPER METHODS --
