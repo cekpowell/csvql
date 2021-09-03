@@ -4,6 +4,17 @@
 
 ---
 
+## Contents
+
+- **[Introduction](#introduction)**
+  * **[Task Description](#task-description)**
+  * **[Language Definition](#language-definition)**
+- **[Running The Application](#running-the-application)**
+- **[Compilation Guide](#compilation-guide)**
+- **[Editing Lexer and Parser (Syntax and Grammer)](#editing-lexer-and-parser--syntax-and-grammer-)**
+
+---
+
 ## Introduction
 
 ### Task Description
