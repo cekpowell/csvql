@@ -1,4 +1,4 @@
-# CSV Query Language
+# CSVQL: CSV Query Language
 
 ## COMP2212: Programming Language Concepts
 
